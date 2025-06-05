@@ -47,6 +47,10 @@ spec:
               value: {{ .Values.db }}
             - name: SPRING_APPLICATION_NAME
               value: {{ printf "%s-%s" .Values.orm .Values.db | quote }}
+            - name: SPRING_PROFILES_ACTIVE
+              value: {{ .Values.spring.profile | default "h2" | quote }}
+            - name: SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT
+              value: {{ .Values.hibernate.dialect | quote }}
           ports:
             - containerPort: 8080
           resources:

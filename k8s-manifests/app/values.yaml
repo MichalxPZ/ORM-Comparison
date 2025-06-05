@@ -7,6 +7,10 @@ db: postgres
 image:
   repository: spring-jdbc-app  # change to your registry/repo if needed
   tag: latest
+hibernate:
+  dialect: org.hibernate.dialect.PostgreSQLDialect
+spring:
+  profile: prod
 
 # Database connection settings
 database:

@@ -19,9 +19,19 @@ for ORM in "${ORMS[@]}"; do
     if [ "$DB" == "postgresql" ]; then
       DB_HOST="postgres"
       DB_PORT=5432
-    else
-      DB_HOST=$DB
+      HIBERNATE_DIALECT="org.hibernate.dialect.PostgreSQLDialect"
+    elif [ "$DB" == "mysql" ]; then
+      DB_HOST="mysql"
       DB_PORT=3306
+      HIBERNATE_DIALECT="org.hibernate.dialect.MySQLDialect"
+    elif [ "$DB" == "mariadb" ]; then
+      DB_HOST="mariadb"
+      DB_PORT=3306
+      HIBERNATE_DIALECT="org.hibernate.dialect.MariaDBDialect"
+    else
+      DB_HOST="localhost"
+      DB_PORT=3306
+      HIBERNATE_DIALECT="org.hibernate.dialect.H2Dialect"
     fi
 
     # Deploy with Helm
@@ -30,12 +40,13 @@ for ORM in "${ORMS[@]}"; do
       --set db=$DB \
       --set database.port=$DB_PORT \
       --set database.host=$DB_HOST \
+      --set hibernate.dialect=$HIBERNATE_DIALECT \
       --values $VALUES_FILE
 
     echo "⏳ Waiting for pod to be ready..."
     kubectl wait --for=condition=ready pod -l app=${ORM}-app-${DB} --timeout=60s || echo "⚠️ Timeout or no pod found"
 
-    sleep 12
+    sleep 30
 
     LOCAL_PORT=$(jot -r 1 30000 40000)
 
