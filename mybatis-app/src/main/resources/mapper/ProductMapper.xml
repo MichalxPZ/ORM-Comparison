@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- src/main/resources/mapper/ProductMapper.xml -->
+<mapper namespace="put.poznan.pl.michalxpz.mybatisapp.repository.ProductMapper">
+    <resultMap id="ProductResult" type="put.poznan.pl.michalxpz.mybatisapp.model.Product">
+        <id property="id" column="id"/>
+        <result property="name" column="name"/>
+        <result property="description" column="description"/>
+        <result property="price" column="price"/>
+        <result property="stock" column="stock"/>
+        <association property="category" javaType="put.poznan.pl.michalxpz.mybatisapp.model.Category">
+            <id property="id" column="category_id"/>
+            <result property="name" column="category_name"/>
+        </association>
+        <!-- Pomijamy automatyczne wczytywanie tags, gdyż dodajemy je osobno -->
+    </resultMap>
+
+    <select id="findAll" resultMap="ProductResult">
+        SELECT p.*, c.id AS category_id, c.name AS category_name
+        FROM product p
+        LEFT JOIN category c ON p.category_id = c.id
+    </select>
+
+    <select id="findById" parameterType="long" resultMap="ProductResult">
+        SELECT p.*, c.id AS category_id, c.name AS category_name
+        FROM product p
+        LEFT JOIN category c ON p.category_id = c.id
+        WHERE p.id = #{id}
+    </select>
+
+    <select id="findByIds" parameterType="java.util.List" resultMap="ProductResult">
+        SELECT p.*, c.id AS category_id, c.name AS category_name
+        FROM product p
+        LEFT JOIN category c ON p.category_id = c.id
+        WHERE p.id IN
+        <foreach item="id" collection="ids" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+
+
+
+
+    <!-- Filtrowanie (dynamiczne WHERE) -->
+    <select id="findFiltered" resultMap="ProductResult">
+        SELECT p.*, c.id AS category_id, c.name AS category_name
+        FROM product p
+        LEFT JOIN category c ON p.category_id = c.id
+        WHERE 1=1
+        <if test="categoryId != null">
+            AND p.category_id = #{categoryId}
+        </if>
+        <if test="minPrice != null">
+            AND p.price >= #{minPrice}
+        </if>
+        <if test="maxPrice != null">
+            AND #{maxPrice} >= p.price
+        </if>
+        <if test="keyword != null and keyword != ''">
+            AND (LOWER(p.name) LIKE CONCAT('%', LOWER(#{keyword}), '%')
+            OR LOWER(p.description) LIKE CONCAT('%', LOWER(#{keyword}), '%'))
+        </if>
+        ORDER BY p.name
+    </select>
+
+    <!-- Aktualizacja cen produktów -->
+    <update id="updatePrices" parameterType="java.math.BigDecimal">
+        UPDATE product
+        SET price = price * (1 + #{percent}/100)
+    </update>
+
+    <insert id="insert" parameterType="put.poznan.pl.michalxpz.mybatisapp.model.Product" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO product (name, description, price, stock, category_id)
+        VALUES (#{name}, #{description}, #{price}, #{stock}, #{category.id})
+    </insert>
+
+    <!-- Wstawianie wpisu do product_tag -->
+    <insert id="insertProductTag" parameterType="map">
+        INSERT INTO product_tag (product_id, tag_id)
+        VALUES (#{productId}, #{tagId})
+    </insert>
+</mapper>

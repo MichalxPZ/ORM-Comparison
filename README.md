@@ -12,7 +12,7 @@ Przed rozpoczęciem upewnij się, że masz zainstalowane następujące narzędzi
 
 Start Minikube – uruchom klaster poleceniem (opcjonalnie zwiększ pamięć/RAM jeśli planujesz testy obciążeniowe z dużymi batchami, np. do 4GB):
 ```bash
-minikube start --memory=4096 --cpus=3
+minikube start --memory=4096 --cpus=6
 ```
 Konfiguracja Docker w środowisku Minikube – wykonaj polecenie, które przełączy domyślny kontekst Dockera na demon Dockera działający wewnątrz Minikube:
 ```bash

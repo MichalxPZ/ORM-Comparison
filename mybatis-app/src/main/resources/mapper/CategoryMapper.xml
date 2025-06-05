@@ -1,0 +1,27 @@
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="put.poznan.pl.michalxpz.mybatisapp.repository.CategoryMapper">
+
+    <resultMap id="CategoryResult" type="put.poznan.pl.michalxpz.mybatisapp.model.Category">
+        <id property="id" column="id"/>
+        <result property="name" column="name"/>
+    </resultMap>
+
+    <select id="findAll" resultMap="CategoryResult">
+        SELECT * FROM category
+    </select>
+
+    <select id="findById" parameterType="long" resultMap="CategoryResult">
+        SELECT * FROM category WHERE id = #{id}
+    </select>
+
+    <insert id="insert"
+            parameterType="put.poznan.pl.michalxpz.mybatisapp.model.Category"
+            useGeneratedKeys="true"
+            keyProperty="id">
+        INSERT INTO category (name) VALUES (#{name})
+    </insert>
+
+</mapper>

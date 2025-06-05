@@ -12,6 +12,8 @@ hibernate:
 spring:
   profile: prod
 
+jooq:
+  dialect: POSTGRES
 # Database connection settings
 database:
   host: postgresql    # e.g. jdbc-postgres, jdbc-mysql, jdbc-mariadb

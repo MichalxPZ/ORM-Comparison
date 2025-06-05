@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- src/main/resources/mapper/TagMapper.xml -->
+<mapper namespace="put.poznan.pl.michalxpz.mybatisapp.repository.TagMapper">
+    <resultMap id="TagResult" type="put.poznan.pl.michalxpz.mybatisapp.model.Tag">
+        <id property="id" column="id"/>
+        <result property="name" column="name"/>
+        <!-- produkty pominięte -->
+    </resultMap>
+
+    <select id="findAll" resultMap="TagResult">
+        SELECT * FROM tag
+    </select>
+    <select id="findById" parameterType="long" resultMap="TagResult">
+        SELECT * FROM tag WHERE id = #{id}
+    </select>
+
+    <insert id="insert" parameterType="put.poznan.pl.michalxpz.mybatisapp.model.Tag" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO tag (name) VALUES (#{name})
+    </insert>
+</mapper>

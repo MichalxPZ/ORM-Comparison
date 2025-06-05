@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- src/main/resources/mapper/OrderMapper.xml -->
+<mapper namespace="put.poznan.pl.michalxpz.mybatisapp.repository.OrderMapper">
+    <resultMap id="OrderResult" type="put.poznan.pl.michalxpz.mybatisapp.model.Order">
+        <id property="id" column="order_id"/>
+        <result property="orderDate" column="order_date"/>
+        <association property="user" javaType="put.poznan.pl.michalxpz.mybatisapp.model.User">
+            <id property="id" column="user_id"/>
+            <result property="name" column="user_name"/>
+            <result property="email" column="user_email"/>
+        </association>
+        <!-- Produkty ustawiamy osobno -->
+    </resultMap>
+
+    <!-- Pobranie zamówienia z danymi użytkownika -->
+    <select id="findById" parameterType="long" resultMap="OrderResult">
+        SELECT o.id AS order_id, o.order_date, u.id AS user_id, u.name AS user_name, u.email AS user_email
+        FROM orders o
+        JOIN users u ON o.user_id = u.id
+        WHERE o.id = #{id}
+    </select>
+
+    <!-- Pobranie produktów dla zamówienia -->
+    <resultMap id="ProductForOrderResult" type="put.poznan.pl.michalxpz.mybatisapp.model.Product">
+        <id property="id" column="id"/>
+        <result property="name" column="name"/>
+        <result property="description" column="description"/>
+        <result property="price" column="price"/>
+        <result property="stock" column="stock"/>
+        <!-- Pomijamy kategorię, jeśli nie potrzeba -->
+    </resultMap>
+    <select id="findItemsByOrderId" parameterType="long" resultMap="ProductForOrderResult">
+        SELECT p.*
+        FROM order_item oi
+        JOIN product p ON oi.product_id = p.id
+        WHERE oi.order_id = #{orderId}
+    </select>
+
+    <!-- Wstawianie zamówienia -->
+    <insert id="insertOrder" parameterType="put.poznan.pl.michalxpz.mybatisapp.model.Order" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO orders (user_id, order_date)
+        VALUES (#{user.id}, #{orderDate})
+    </insert>
+
+    <!-- Wstawianie wpisu do order_item -->
+    <insert id="insertOrderItem" parameterType="map">
+        INSERT INTO order_item (order_id, product_id)
+        VALUES (#{orderId}, #{productId})
+    </insert>
+</mapper>

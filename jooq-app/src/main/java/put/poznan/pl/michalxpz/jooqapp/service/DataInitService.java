@@ -1,0 +1,115 @@
+package put.poznan.pl.michalxpz.jooqapp.service;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.jooq.DSLContext;
+import put.poznan.pl.michalxpz.generated.tables.records.*;
+import put.poznan.pl.michalxpz.jooqapp.repository.CategoryRepository;
+import put.poznan.pl.michalxpz.jooqapp.repository.TagRepository;
+import put.poznan.pl.michalxpz.jooqapp.repository.UserRepository;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.*;
+
+import static put.poznan.pl.michalxpz.generated.Tables.*;
+
+@Service
+public class DataInitService {
+    @Autowired private DSLContext dsl;
+    @Autowired private UserRepository userRepository;
+    @Autowired private CategoryRepository categoryRepository;
+    @Autowired private TagRepository tagRepository;
+
+    /** Initializes the database with sample users, categories, tags, products, and orders. */
+    @Transactional
+    public void initializeDatabase(int userCount, int categoryCount, int productCount,
+                                   int orderCount, int itemsPerOrder) {
+        Random rand = new Random();
+
+        // 1. Users
+        List<UsersRecord> users = new ArrayList<>();
+        for (int i = 1; i <= userCount; i++) {
+            UsersRecord user = dsl.newRecord(USERS);
+            user.setName("User" + i);
+            user.setEmail("user" + i + "@example.com");
+            users.add(user);
+        }
+        userRepository.saveAll(users);
+
+        // 2. Categories
+        List<CategoryRecord> categories = new ArrayList<>();
+        for (int i = 1; i <= categoryCount; i++) {
+            CategoryRecord category = dsl.newRecord(CATEGORY);
+            category.setName("Category" + i);
+            categories.add(category);
+        }
+        categoryRepository.saveAll(categories);
+
+        // 3. Tags
+        List<TagRecord> tags = new ArrayList<>();
+        for (int i = 1; i <= categoryCount * 2; i++) {
+            TagRecord tag = dsl.newRecord(TAG);
+            tag.setName("Tag" + i);
+            tags.add(tag);
+        }
+        tagRepository.saveAll(tags);
+
+        // 4. Products
+        List<ProductRecord> products = new ArrayList<>();
+        for (int i = 1; i <= productCount; i++) {
+            // Pick random category
+            CategoryRecord category = categories.get(rand.nextInt(categories.size()));
+            ProductRecord product = dsl.newRecord(PRODUCT);
+            product.setName("Product" + i);
+            product.setDescription("Description of product " + i);
+            product.setPrice(BigDecimal.valueOf(10 + rand.nextInt(90)));
+            product.setStock(100);
+            product.setCategoryId(category.getId());
+            product.store(); // Insert and get ID
+
+            // Assign random tags (1 to 3 unique tags)
+            int tagCount = 1 + rand.nextInt(3);
+            Set<Long> productTagIds = new HashSet<>();
+            for (int j = 0; j < tagCount; j++) {
+                Long tagId = tags.get(rand.nextInt(tags.size())).getId();
+                productTagIds.add(tagId);
+            }
+            // Insert join table entries for product-tags
+            for (Long tagId : productTagIds) {
+                dsl.insertInto(PRODUCT_TAG)
+                        .columns(PRODUCT_TAG.PRODUCT_ID, PRODUCT_TAG.TAG_ID)
+                        .values(product.getId(), tagId)
+                        .execute();
+            }
+            products.add(product);
+        }
+
+        // 5. Orders
+        List<Long> productIds = products.stream().map(ProductRecord::getId).toList();
+        for (int i = 0; i < orderCount; i++) {
+            // Pick random user
+            UsersRecord user = users.get(rand.nextInt(users.size()));
+            // Create order
+            OrdersRecord order = dsl.newRecord(ORDERS);
+            order.setOrderDate(LocalDateTime.now());
+            order.setUserId(user.getId());
+            order.store(); // Insert order
+
+            // Add random products to this order
+            Set<Long> orderProductIds = new HashSet<>();
+            for (int j = 0; j < itemsPerOrder; j++) {
+                orderProductIds.add(productIds.get(rand.nextInt(productIds.size())));
+            }
+            // Insert join table entries for order-products
+            for (Long pid : orderProductIds) {
+                dsl.insertInto(ORDER_ITEM)
+                        .columns(ORDER_ITEM.ORDER_ID, ORDER_ITEM.PRODUCT_ID)
+                        .values(order.getId().longValue(), pid)
+                        .execute();
+            }
+        }
+        // Note: Orders already inserted individually above.
+    }
+}

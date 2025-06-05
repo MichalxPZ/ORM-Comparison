@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- src/main/resources/mapper/UserMapper.xml -->
+<mapper namespace="put.poznan.pl.michalxpz.mybatisapp.repository.UserMapper">
+    <resultMap id="UserResult" type="put.poznan.pl.michalxpz.mybatisapp.model.User">
+        <id property="id" column="id"/>
+        <result property="name" column="name"/>
+        <result property="email" column="email"/>
+        <!-- lista orders pominięta, bo nie potrzebujemy odczytywać ich tutaj -->
+    </resultMap>
+
+    <select id="findAll" resultMap="UserResult">
+        SELECT * FROM users
+    </select>
+
+    <select id="findById" parameterType="long" resultMap="UserResult">
+        SELECT * FROM users WHERE id = #{id}
+    </select>
+
+    <insert id="insert" parameterType="put.poznan.pl.michalxpz.mybatisapp.model.User" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO users (name, email) VALUES (#{name}, #{email})
+    </insert>
+</mapper>

@@ -2,8 +2,17 @@
 
 set -e
 
-ORMS=("jdbc" "hibernate" "jooq" "mybatis")
-DBS=("postgresql" "mysql" "mariadb")
+ORMS=(
+#  "jdbc"
+#  "hibernate"
+#  "jooq"
+  "mybatis"
+)
+DBS=(
+  "postgresql"
+  "mysql"
+  "mariadb"
+)
 
 CHART_PATH="./k8s-manifests/app"
 VALUES_FILE="$CHART_PATH/values.yaml"
@@ -20,18 +29,22 @@ for ORM in "${ORMS[@]}"; do
       DB_HOST="postgres"
       DB_PORT=5432
       HIBERNATE_DIALECT="org.hibernate.dialect.PostgreSQLDialect"
+      JOOQ_DIALECT="POSTGRES"
     elif [ "$DB" == "mysql" ]; then
       DB_HOST="mysql"
       DB_PORT=3306
       HIBERNATE_DIALECT="org.hibernate.dialect.MySQLDialect"
+      JOOQ_DIALECT="MYSQL"
     elif [ "$DB" == "mariadb" ]; then
       DB_HOST="mariadb"
       DB_PORT=3306
       HIBERNATE_DIALECT="org.hibernate.dialect.MariaDBDialect"
+      JOOQ_DIALECT="MARIADB"
     else
       DB_HOST="localhost"
       DB_PORT=3306
       HIBERNATE_DIALECT="org.hibernate.dialect.H2Dialect"
+      JOOQ_DIALECT="H2"
     fi
 
     # Deploy with Helm
@@ -41,6 +54,7 @@ for ORM in "${ORMS[@]}"; do
       --set database.port=$DB_PORT \
       --set database.host=$DB_HOST \
       --set hibernate.dialect=$HIBERNATE_DIALECT \
+      --set jooq.dialect=$JOOQ_DIALECT \
       --values $VALUES_FILE
 
     echo "⏳ Waiting for pod to be ready..."
