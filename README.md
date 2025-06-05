@@ -1,85 +1,186 @@
-## Konfiguracja minikube
+## Prerequisites
 
-Start minikube
+Przed rozpoczęciem upewnij się, że masz zainstalowane następujące narzędzia:
+1. Minikube – lokalny klaster Kubernetes (zalecana wersja obsługująca Kubernetes 1.23+).
+2. Kubectl – klient linii poleceń Kubernetes, skonfigurowany do komunikacji z klastrem Minikube.
+3. Docker – środowisko do budowania obrazów Docker (Minikube dostarcza własny demon Dockera, z którego skorzystamy).
+4. Helm – narzędzie do instalacji chartów Helm (pakietów aplikacji dla K8s).
+5. Apache JMeter – narzędzie do testów wydajnościowych (może być uruchomione w trybie graficznym lub konsolowym).
+6. Opcjonalnie: psql (klient PostgreSQL) lub inny klient SQL do weryfikacji zawartości bazy (można też użyć narzędzia kubectl exec/port-forward jak opisano w krokach).
+
+## Uruchomienie klastra Minikube
+
+Start Minikube – uruchom klaster poleceniem (opcjonalnie zwiększ pamięć/RAM jeśli planujesz testy obciążeniowe z dużymi batchami, np. do 4GB):
 ```bash
-minikube start --cpus=4 --memory=4g
+minikube start --memory=4096 --cpus=3
+```
+Konfiguracja Docker w środowisku Minikube – wykonaj polecenie, które przełączy domyślny kontekst Dockera na demon Dockera działający wewnątrz Minikube:
+```bash
+eval $(minikube -p minikube docker-env)
+```
+Powyższe polecenie spowoduje, że kolejne komendy docker build/docker push będą operować na obrazie wewnątrz Minikube. Możesz zweryfikować, czy działa to poprawnie poleceniem docker images (powinno działać bez błędów).
+
+## Budowa lokalnego obrazu Docker aplikacji 
+Aby zbudować obraz, umieszczamy Dockerfile w folderze głównym projektu i wykonujemy komendę (np. w terminalu w katalogu projektu):
+```bash
+docker build -t spring-jdbc-app:latest .
 ```
 
-Dodaj repozytorium i zainstaluj Postgresa z prostą konfiguracją:
+## Konfiguracja bazy danych
+W repozytorium znajdują się manifesty Kubernetes (pliki YAML) dla różnych baz danych. W zależności od wybranej bazy, zastosuj odpowiednie pliki:
 ```bash
-kubectl create configmap pg-init --from-file=k8s/jdbc_init.sql
+kubectl apply -f k8s-manifests/databases/postgres.yaml
+```
+```bash
+kubectl apply -f  k8s-manifests/databases/mysql.yaml
+```
+```bash
+kubectl apply -f  k8s-manifests/databases/mariadb.yaml
 ```
 
-```bash 
-helm repo add bitnami https://charts.bitnami.com/bitnami
-helm repo update
-helm install pg bitnami/postgresql \
-  --set auth.username=myuser,auth.password=mypassword,auth.database=mydatabase \
-  --set primary.resources.requests.cpu=100m,primary.resources.requests.memory=256Mi \
-  --set primary.resources.limits.cpu=500m,primary.resources.limits.memory=512Mi \
-  --set initdbScripts.initdbScriptsFile=init.sql \
-  --set initdbScripts.configMap=pg-init
- ```
+## Inicjalizacja bazy danych
+Aby zainicjalizować bazę danych, wykonaj następujące kroki:
+1. Postgres
+```bash
+POD=$(kubectl get pods -l app=db,db=postgres -o jsonpath='{.items[0].metadata.name}')
+kubectl cp k8s-manifests/databases/init-schema-scripts/schema-postgres.sql $POD:/tmp/schema.sql
+kubectl exec -it $POD -- psql -U exampleuser -d exampledb -f /tmp/schema.sql
+```
+2. MySQL
+```bash
+POD=$(kubectl get pods -l app=db,db=mysql -o jsonpath='{.items[0].metadata.name}')
+kubectl exec -i "$POD" -- mysql -u exampleuser -pexamplepass exampledb <<EOF
+$(cat k8s-manifests/databases/init-schema-scripts/schema-mysql.sql)
+EOF
+```
+3. MariaDB
+```bash
+POD=$(kubectl get pods -l app=db,db=mariadb -o jsonpath='{.items[0].metadata.name}')
+kubectl exec -i "$POD" -- mariadb -u exampleuser -pexamplepass exampledb <<EOF
+$(cat k8s-manifests/databases/init-schema-scripts/schema-mariadb.sql)
+EOF
+```
+
+## Wdrażanie aplikacji
+Po przygotowaniu bazy danych zainstaluj aplikację jdbc-app za pomocą Helm. 
+Chart znajduje się w bieżącym katalogu (./).
+Domyślnie w values.yaml ustawiona jest pewna baza (np. PostgreSQL).
+Instalację wykonaj poleceniem:
+```bash
+helm upgrade --install jdbc-app-postgresql ./k8s-manifests/app/ \
+  --set db=postgresql \
+  --set database.port=5432 \
+  --set database.host=postgres \
+  --values k8s-manifests/app/values.yaml
+```
+To polecenie instaluje release o nazwie jdbc-app korzystając z pliku values.yaml.
+Jeśli chcesz zmienić typ bazy danych na inny niż domyślny,
+możesz użyć flagi --set db=.... Na przykład:
+```bash
+helm install jdbc-app ./ --set db=mysql
+```
+
+Inne aplikacje:
+```bash
+helm upgrade --install jdbc-app-mysql ./k8s-manifests/app/ \
+  --set db=mysql \
+  --set database.port=3306 \
+  --set database.host=mysql \
+  --values k8s-manifests/app/values.yaml
+```
+```bash
+helm upgrade --install jdbc-app-mariadb ./k8s-manifests/app/ \
+  --set db=mariadb \
+  --set database.port=3306 \
+  --set database.host=mariadb \
+  --values k8s-manifests/app/values.yaml
+```
+
+Test:
+- Sprawdź, czy aplikacja działa poprawnie:
+```bash
+kubectl port-forward svc/jdbc-app-postgres 8080:8080 &
+curl -X POST \
+     -v \
+     'http://localhost:8080/api/orders/batchItems?count=500'
+```
+
+## Instalacja narzędzi do monitoringu
+### Prometheus
 ```bash
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 helm repo update
-helm install prometheus prometheus-community/prometheus \
-  --set server.persistentVolume.enabled=false \
-  --set alertmanager.persistentVolume.enabled=false
 ```
 ```bash
-helm repo add grafana https://grafana.github.io/helm-charts
+helm install prometheus prometheus-community/prometheus --wait
+```
+Test:
+```bash
+kubectl port-forward svc/prometheus-server 9090:80 &
+```
+Otwórz
+```
+http://localhost:9090/targets
+```
+Query PromQL:
+```bash
+http_server_requests_seconds_count{uri="/api/orders/batchItems"}
+```
+
+### Grafana
+```bash
+helm repo add grafana https://grafana.github.io/helm-charts   # jeśli repo nie jest dodane
 helm repo update
-helm install grafana grafana/grafana \
-  --set persistence.enabled=false  
+helm install grafana grafana/grafana --set adminPassword=admin123 --wait
+```
+Portforwarding:
+```bash
+kubectl port-forward svc/grafana 3000:80 &
+```
+Logowanie do Grafany:
+```
+http://localhost:3000/login
+```
+```bash
+kubectl get secret grafana -o jsonpath="{.data.admin-password}" | base64 -d && echo
+```
+Dodanie datasource Prometheus:
+1. Zaloguj się do Grafany (domyślnie admin/admin123).
+2. Przejdź do Configuration -> Data Sources.
+3. Dodaj nowy data source i wybierz Prometheus.
+4. W polu URL wpisz:
+```
+http://prometheus-server.default.svc.cluster.local:80
+```
+5. Wybierz opcję Access: Server (default).
+6. Kliknij Save & Test.
+Tworzenie dashoardu testowego:
+Tworzenie dashboardu testowego – przejdź do Create -> Dashboard i dodaj nowy Panel. W polu Query wybierz nasz data source Prometheus i wpisz jedno z zapytań PromQL, np.:
+1. Dla obserwacji czasu odpowiedzi:
+```
+rate(
+    http_server_requests_seconds_sum{uri="/api/orders/batchItems",method="POST",status="200"}[5m]
+  )
+```
+2. Dodaj kolejny Panel na tym samym dashboardzie, tym razem np. z zapytaniem:
+```
+rate(http_server_requests_seconds_count{uri="/api/orders/batchItems",status="200"}[1m])
 ```
 
-Sprawdź status:
-```bash
-   kubectl get pods -o wide
+## Query PromQL
+1. Scenariusz inicjalizacji bazy danych:
+```promql
+(
+  sum by (application) (rate(http_server_requests_seconds_sum{uri="/api/init"}[60m]))
+  /
+  sum by (application) (rate(http_server_requests_seconds_count{uri="/api/init"}[60m]))
+) * 1000
 ```
 
-Uruchom aplikację jdbc
+
+## Czyszczenie środowiska
+Aby usunąć aplikację i wszystkie zasoby, które zostały utworzone, użyj polecenia:
 ```bash
-kubectl apply -f k8s/jdbc.yaml
-```
-Sprawdź status:
-```bash
-   kubectl get pods -l app=jdbc-app
+helm uninstall jdbc-app
 ```
 
-Logowanie do Grafany
-```bash
-kubectl port-forward svc/grafana 3000:80
-```
-W innym terminalu:
-```bash
-kubectl get secret grafana -o jsonpath="{.data.admin-password}" | base64 -d ; echo
-```
-
-Dodaj źródło danych w Grafanie
-W Grafanie:
-1. Configuration → Data Sources → Add data source → Prometheus
-2. URL: http://prometheus-server.default.svc.cluster.local:80
-3. Save & Test → powinieneś zobaczyć zielony komunikat.
-
-Sprawdź liste targetów Prometheusa
-```bash
-kubectl port-forward svc/prometheus-server 9090:80
-```
-Otwórz http://localhost:9090/targets
-Powinieneś zobaczyć wśród targetów adres jdbc-app.default.svc.cluster.local:8080 z endpointem /actuator/prometheus.
-
-Uruchom krótki test
-```bash
-curl http://$(minikube ip):$(kubectl get svc jdbc-app -o jsonpath='{.spec.ports[0].nodePort}')/api/orders/1
-```
-lub:
-```bash
-curl http://localhost:8080/api/orders/1
-```
-
-Potem w Grafanie na zakładce “Explore” wpisz np.:
-```bash
-http_server_requests_seconds_count{uri="/api/orders/1"}
-```

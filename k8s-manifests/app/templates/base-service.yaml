@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.orm }}-app-{{ .Values.db }}
+  labels:
+    app: {{ .Values.orm }}-app-{{ .Values.db }}
+    orm: {{ .Values.orm }}
+    db: {{ .Values.db }}
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port:   "8080"
+    prometheus.io/path:   "/actuator/prometheus"
+spec:
+  type: ClusterIP
+  selector:
+    app: {{ .Values.orm }}-app-{{ .Values.db }}
+    orm: {{ .Values.orm }}
+    db: {{ .Values.db }}
+  ports:
+    - port: 8080
+      targetPort: 8080
+      protocol: TCP
+      name: http

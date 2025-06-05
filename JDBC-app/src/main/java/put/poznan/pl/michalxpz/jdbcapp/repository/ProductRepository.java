@@ -14,7 +14,6 @@ import java.util.List;
 
 @Repository
 public class ProductRepository {
-
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
@@ -40,19 +39,16 @@ public class ProductRepository {
 
     public Product findById(Long id) {
         String sql = "SELECT * FROM products WHERE id = ?";
-        return jdbcTemplate.queryForObject(sql,
-                (rs, rowNum) -> {
-                    Product p = new Product();
-                    p.setId(rs.getLong("id"));
-                    p.setCategoryId(rs.getLong("category_id"));
-                    p.setName(rs.getString("name"));
-                    p.setDescription(rs.getString("description"));
-                    p.setPrice(rs.getBigDecimal("price"));
-                    p.setStock(rs.getInt("stock"));
-                    return p;
-                },
-                id
-        );
+        return jdbcTemplate.queryForObject(sql, (rs, rowNum) -> {
+            Product product = new Product();
+            product.setId(rs.getLong("id"));
+            product.setCategoryId(rs.getLong("category_id"));
+            product.setName(rs.getString("name"));
+            product.setDescription(rs.getString("description"));
+            product.setPrice(rs.getBigDecimal("price"));
+            product.setStock(rs.getInt("stock"));
+            return product;
+        }, id);
     }
 
     public int updateStock(Long id, int newStock) {
@@ -62,8 +58,7 @@ public class ProductRepository {
 
     public List<Product> findByCriteria(Long categoryId, BigDecimal minPrice,
                                         BigDecimal maxPrice, String keyword) {
-        StringBuilder sql = new StringBuilder(
-                "SELECT * FROM products WHERE 1=1");
+        StringBuilder sql = new StringBuilder("SELECT * FROM products WHERE 1=1");
         List<Object> params = new ArrayList<>();
         if (categoryId != null) {
             sql.append(" AND category_id = ?");
@@ -82,21 +77,20 @@ public class ProductRepository {
             params.add("%" + keyword + "%");
         }
         sql.append(" ORDER BY price ASC");
-        // Mapowanie wyniku na listę Product (za pomocą lambda RowMapper)
         return jdbcTemplate.query(sql.toString(), params.toArray(), (rs, rowNum) -> {
-            Product p = new Product();
-            p.setId(rs.getLong("id"));
-            p.setCategoryId(rs.getLong("category_id"));
-            p.setName(rs.getString("name"));
-            p.setDescription(rs.getString("description"));
-            p.setPrice(rs.getBigDecimal("price"));
-            p.setStock(rs.getInt("stock"));
-            return p;
+            Product product = new Product();
+            product.setId(rs.getLong("id"));
+            product.setCategoryId(rs.getLong("category_id"));
+            product.setName(rs.getString("name"));
+            product.setDescription(rs.getString("description"));
+            product.setPrice(rs.getBigDecimal("price"));
+            product.setStock(rs.getInt("stock"));
+            return product;
         });
     }
 
     public int updatePrices(BigDecimal percent) {
-        // Przykład: percent = 10 oznacza +10%
+        // Example: percent = 10 means increase prices by +10%
         BigDecimal factor = BigDecimal.ONE.add(percent.divide(new BigDecimal("100")));
         String sql = "UPDATE products SET price = price * ?";
         return jdbcTemplate.update(sql, factor);

@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres
+  labels:
+    app: db
+    db: postgres
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: db
+      db: postgres
+  template:
+    metadata:
+      labels:
+        app: db
+        db: postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:15-alpine
+          env:
+            - name: POSTGRES_DB
+              value: exampledb
+            - name: POSTGRES_USER
+              value: exampleuser
+            - name: POSTGRES_PASSWORD
+              value: examplepass
+          ports:
+            - containerPort: 5432
+              name: postgres
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  labels:
+    app: db
+    db: postgres
+spec:
+  type: ClusterIP
+  ports:
+    - port: 5432
+      targetPort: 5432
+      name: postgres
+  selector:
+    app: db
+    db: postgres

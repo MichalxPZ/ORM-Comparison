@@ -2,9 +2,12 @@ package put.poznan.pl.michalxpz.jdbcapp.repository;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 import put.poznan.pl.michalxpz.jdbcapp.model.OrderItem;
 
+import java.sql.PreparedStatement;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,18 +30,25 @@ public class OrderItemRepository {
 
     public void insertBatch(List<OrderItem> items) {
         String sql = "INSERT INTO order_items(order_id, product_id, quantity) VALUES(?,?,?)";
-        // Przygotowanie listy parametrów dla batch (każdy element listy to tablica param)
         List<Object[]> batchArgs = new ArrayList<>();
         for (OrderItem item : items) {
-            batchArgs.add(new Object[]{
-                    item.getOrderId(), item.getProductId(), item.getQuantity()
-            });
+            batchArgs.add(new Object[]{ item.getOrderId(), item.getProductId(), item.getQuantity() });
         }
         jdbcTemplate.batchUpdate(sql, batchArgs);
     }
 
-    public void insert(OrderItem item) {
+    public Long insert(OrderItem item) {
         String sql = "INSERT INTO order_items(order_id, product_id, quantity) VALUES(?,?,?)";
-        jdbcTemplate.update(sql, item.getOrderId(), item.getProductId(), item.getQuantity());
+        KeyHolder keyHolder = new GeneratedKeyHolder();
+        jdbcTemplate.update(con -> {
+            PreparedStatement ps = con.prepareStatement(sql, new String[]{"id"});
+            ps.setLong(1, item.getOrderId());
+            ps.setLong(2, item.getProductId());
+            ps.setInt(3, item.getQuantity());
+            return ps;
+        }, keyHolder);
+        Long newId = keyHolder.getKey().longValue();
+        item.setId(newId);
+        return newId;
     }
 }

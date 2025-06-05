@@ -1,0 +1,30 @@
+# Default parameters for JDBC Helm chart
+orm: jdbc
+# Type of database: postgres, mysql or mariadb
+db: postgres
+
+# Docker image for the application
+image:
+  repository: spring-jdbc-app  # change to your registry/repo if needed
+  tag: latest
+
+# Database connection settings
+database:
+  host: postgresql    # e.g. jdbc-postgres, jdbc-mysql, jdbc-mariadb
+  port: 5432                     # standard port (5432 for Postgres, 3306 for MySQL/MariaDB)
+  name: exampledb                # database name
+  user: exampleuser              # database user
+  password: examplepass          # database password
+  driver: org.postgresql.Driver  # or com.mysql.cj.jdbc.Driver, or org.mariadb.jdbc.Driver
+
+# Kubernetes resource requests & limits
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+# Number of replicas for the application
+replicaCount: 1

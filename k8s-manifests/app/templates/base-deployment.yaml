@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name:  {{ .Values.orm }}-app-{{ .Values.db }}
+  labels:
+    app:  {{ .Values.orm }}-app-{{ .Values.db }}
+    orm: {{ .Values.orm }}
+    db: {{ .Values.db }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Values.orm }}-app-{{ .Values.db }}
+      orm: {{ .Values.orm }}
+      db: {{ .Values.db }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.orm }}-app-{{ .Values.db }}
+        orm: {{ .Values.orm }}
+        db: {{ .Values.db }}
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port:   "8080"
+        prometheus.io/path:   "/actuator/prometheus"
+    spec:
+      containers:
+        - name: {{ .Values.orm }}-app
+          image: "{{ printf "spring-%s-app:%s" .Values.orm .Values.image.tag }}"
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: DB_HOST
+              value: "{{ .Values.database.host }}"
+            - name: DB_PORT
+              value: "{{ .Values.database.port }}"
+            - name: DB_NAME
+              value: "{{ .Values.database.name }}"
+            - name: DB_USER
+              value: "{{ .Values.database.user }}"
+            - name: DB_PASS
+              value: "{{ .Values.database.password }}"
+            - name: DB_DRIVER
+              value: {{ include "jdbcApp.driverClass" . | quote }}
+            - name: ORM
+              value: {{ .Values.orm }}
+            - name: DB
+              value: {{ .Values.db }}
+            - name: SPRING_APPLICATION_NAME
+              value: {{ printf "%s-%s" .Values.orm .Values.db | quote }}
+          ports:
+            - containerPort: 8080
+          resources:
+            requests:
+              cpu:    "{{ .Values.resources.requests.cpu }}"
+              memory: "{{ .Values.resources.requests.memory }}"
+            limits:
+              cpu:    "{{ .Values.resources.limits.cpu }}"
+              memory: "{{ .Values.resources.limits.memory }}"

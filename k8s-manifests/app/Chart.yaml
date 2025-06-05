@@ -1,0 +1,6 @@
+apiVersion: v2
+name: jdbc-app
+description: A Helm chart for deploying the JDBC application against various databases
+type: application
+version: 0.1.0
+appVersion: "1.0.0"

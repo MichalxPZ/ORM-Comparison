@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mariadb
+  labels:
+    app: db
+    db: mariadb
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: db
+      db: mariadb
+  template:
+    metadata:
+      labels:
+        app: db
+        db: mariadb
+    spec:
+      containers:
+        - name: mariadb
+          image: mariadb:10.6   # przykładowa wersja MariaDB
+          env:
+            - name: MARIADB_ROOT_PASSWORD
+              value: examplepass
+            - name: MARIADB_DATABASE
+              value: exampledb
+            - name: MARIADB_USER
+              value: exampleuser
+            - name: MARIADB_PASSWORD
+              value: examplepass
+          ports:
+            - containerPort: 3306
+              name: mariadb
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mariadb
+  labels:
+    app: db
+    db: mariadb
+spec:
+  type: ClusterIP
+  ports:
+    - port: 3306
+      targetPort: 3306
+      name: mariadb
+  selector:
+    app: db
+    db: mariadb

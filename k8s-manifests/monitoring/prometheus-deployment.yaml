@@ -1,0 +1,38 @@
+# Deployment Prometheusa
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prometheus-server
+  # namespace: monitoring
+  labels:
+    app: prometheus
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: prometheus
+  template:
+    metadata:
+      labels:
+        app: prometheus
+    spec:
+      containers:
+        - name: prometheus
+          image: prom/prometheus:v2.44.0  # przykładowa aktualna wersja Prometheus
+          args:
+            - "--config.file=/etc/prometheus/prometheus.yml"
+            - "--storage.tsdb.path=/prometheus"       # lokalna baza TSDB (bez trwałego volume w tym przykładzie)
+          ports:
+            - name: web
+              containerPort: 9090                      # port interfejsu web Prometheusa
+          volumeMounts:
+            - name: config-volume
+              mountPath: /etc/prometheus/
+      volumes:
+        - name: config-volume
+          configMap:
+            name: prometheus-config
+            # items:
+            # - key: prometheus.yml
+            #   path: prometheus.yml
+

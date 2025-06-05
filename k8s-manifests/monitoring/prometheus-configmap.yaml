@@ -1,0 +1,48 @@
+# ConfigMap z konfiguracją Prometheusa (prometheus.yml)
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+  # namespace: monitoring  # (opcjonalnie użyj osobnej ns dla Prometheusa)
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 15s
+      evaluation_interval: 15s
+    scrape_configs:
+      - job_name: "jdbc-applications"
+        kubernetes_sd_configs:
+          - role: pod
+            # namespaces:               # (opcjonalnie ogranicz do konkretnej ns)
+            #   names: ["default"]      # 
+        relabel_configs:
+          # Zachowaj tylko pody z etykietami app=jdbc-app, orm=jdbc, db in (postgres|mysql|mariadb)
+          - source_labels: [__meta_kubernetes_pod_label_app]
+            regex: jdbc-app
+            action: keep
+          - source_labels: [__meta_kubernetes_pod_label_orm]
+            regex: jdbc
+            action: keep
+          - source_labels: [__meta_kubernetes_pod_label_db]
+            regex: (postgres|mysql|mariadb)
+            action: keep
+          # Ustaw adres podu z portem 8080 (Prometheus domyślnie użyje IP podu; tu dodajemy port)
+          - source_labels: [__meta_kubernetes_pod_ip]
+            regex: (.+)
+            replacement: $1:8080
+            target_label: __address__
+            action: replace
+          # Ustaw ścieżkę metrics na /actuator/prometheus (zamiast domyślnego /metrics)
+          - target_label: __metrics_path__
+            replacement: /actuator/prometheus
+            action: replace
+          # Przenieś wszystkie etykiety poda do etykiet metryk (przydatne do filtrowania w zapytaniach)
+          - action: labelmap
+            regex: __meta_kubernetes_pod_label_(.+)
+          # Dodaj pomocnicze etykiety identyfikujące pod i namespace
+          - source_labels: [__meta_kubernetes_namespace]
+            target_label: kubernetes_namespace
+            action: replace
+          - source_labels: [__meta_kubernetes_pod_name]
+            target_label: kubernetes_pod_name
+            action: replace

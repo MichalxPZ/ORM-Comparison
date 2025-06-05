@@ -27,8 +27,7 @@ public class OrderRepository {
     }
 
     public Long insert(Order order) {
-        // Wstawienie zamówienia i uzyskanie wygenerowanego klucza (ID)
-        // (Przyjmujemy, że baza generuje ID, np. SERIAL; używamy KeyHolder aby pobrać wygenerowane id)
+        // Insert order and retrieve generated primary key (ID)
         String sql = "INSERT INTO orders(user_id, order_date) VALUES(?, ?)";
         KeyHolder keyHolder = new GeneratedKeyHolder();
         jdbcTemplate.update(con -> {
