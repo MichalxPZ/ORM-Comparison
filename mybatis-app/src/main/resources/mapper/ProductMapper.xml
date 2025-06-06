@@ -19,21 +19,21 @@
 
     <select id="findAll" resultMap="ProductResult">
         SELECT p.*, c.id AS category_id, c.name AS category_name
-        FROM product p
-        LEFT JOIN category c ON p.category_id = c.id
+        FROM products p
+        LEFT JOIN categories c ON p.category_id = c.id
     </select>
 
     <select id="findById" parameterType="long" resultMap="ProductResult">
         SELECT p.*, c.id AS category_id, c.name AS category_name
-        FROM product p
-        LEFT JOIN category c ON p.category_id = c.id
+        FROM products p
+        LEFT JOIN categories c ON p.category_id = c.id
         WHERE p.id = #{id}
     </select>
 
     <select id="findByIds" parameterType="java.util.List" resultMap="ProductResult">
         SELECT p.*, c.id AS category_id, c.name AS category_name
-        FROM product p
-        LEFT JOIN category c ON p.category_id = c.id
+        FROM products p
+        LEFT JOIN categories c ON p.category_id = c.id
         WHERE p.id IN
         <foreach item="id" collection="ids" open="(" separator="," close=")">
             #{id}
@@ -46,8 +46,8 @@
     <!-- Filtrowanie (dynamiczne WHERE) -->
     <select id="findFiltered" resultMap="ProductResult">
         SELECT p.*, c.id AS category_id, c.name AS category_name
-        FROM product p
-        LEFT JOIN category c ON p.category_id = c.id
+        FROM products p
+        LEFT JOIN categories c ON p.category_id = c.id
         WHERE 1=1
         <if test="categoryId != null">
             AND p.category_id = #{categoryId}
@@ -67,12 +67,12 @@
 
     <!-- Aktualizacja cen produktów -->
     <update id="updatePrices" parameterType="java.math.BigDecimal">
-        UPDATE product
+        UPDATE products
         SET price = price * (1 + #{percent}/100)
     </update>
 
     <insert id="insert" parameterType="put.poznan.pl.michalxpz.mybatisapp.model.Product" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO product (name, description, price, stock, category_id)
+        INSERT INTO products (name, description, price, stock, category_id)
         VALUES (#{name}, #{description}, #{price}, #{stock}, #{category.id})
     </insert>
 

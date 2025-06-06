@@ -26,7 +26,7 @@ public class OrderService {
     public OrderWithItems getOrderWithItems(Long orderId) {
         // Fetch order record and its products
         OrdersRecord orderRec = orderRepository.findById(orderId);
-        List<ProductRecord> products = orderRepository.findProductsByOrderId(orderId);
+        List<ProductsRecord> products = orderRepository.findProductsByOrderId(orderId);
 
         // Map to our DTO-like object
         OrderWithItems orderWithItems = new OrderWithItems();
@@ -46,13 +46,13 @@ public class OrderService {
         Integer userId = Math.toIntExact(users.get(0).getId());
 
         // Get all products to cycle through
-        List<ProductRecord> allProducts = productRepository.findAll();
+        List<ProductsRecord> allProducts = productRepository.findAll();
         if (allProducts.isEmpty()) throw new IllegalStateException("No products found");
 
         // Select product IDs (wrapping around the list)
         Set<Long> orderProductIds = new HashSet<>();
         for (int i = 0; i < itemCount; i++) {
-            orderProductIds.add(allProducts.get(i % allProducts.size()).getId());
+            orderProductIds.add(Long.valueOf(allProducts.get(i % allProducts.size()).getId()));
         }
 
         // Create and return the order
@@ -66,7 +66,7 @@ public class OrderService {
         userRepository.findById(userId);
 
         // Verify all products exist
-        List<ProductRecord> products = productRepository.findAllById(productIds);
+        List<ProductsRecord> products = productRepository.findAllById(productIds);
         if (products.size() != productIds.size()) {
             throw new IllegalArgumentException("Some products not found");
         }

@@ -16,7 +16,7 @@ import java.util.Set;
 public class Order {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Integer id;
 
     private LocalDateTime orderDate;
 
@@ -26,7 +26,7 @@ public class Order {
 
     @ManyToMany
     @JoinTable(
-            name = "order_item",
+            name = "order_items",
             joinColumns = @JoinColumn(name = "order_id"),
             inverseJoinColumns = @JoinColumn(name = "product_id")
     )
@@ -34,7 +34,7 @@ public class Order {
 
 
 
-    public Order(Long id, User user, LocalDateTime orderDate) {
+    public Order(Integer id, User user, LocalDateTime orderDate) {
         this.id = id;
         this.user = user;
         this.orderDate = orderDate;

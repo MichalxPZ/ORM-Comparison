@@ -11,7 +11,7 @@ import put.poznan.pl.michalxpz.hibernateapp.model.Product;
 import java.math.BigDecimal;
 
 @Repository
-public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpecificationExecutor<Product> {
+public interface ProductRepository extends JpaRepository<Product, Integer>, JpaSpecificationExecutor<Product> {
     // Metoda do masowej aktualizacji cen (batch update)
     @Modifying
     @Query("UPDATE Product p SET p.price = p.price * (1 + :percent/100)")

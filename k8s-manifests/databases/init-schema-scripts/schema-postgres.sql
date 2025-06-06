@@ -28,5 +28,18 @@ CREATE TABLE order_items (
     id SERIAL PRIMARY KEY,
     order_id INTEGER REFERENCES orders(id),
     product_id INTEGER REFERENCES products(id),
-    quantity INT NOT NULL
+    quantity INT DEFAULT 1
+);
+
+CREATE TABLE tags (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(255) NOT NULL
+);
+
+CREATE TABLE product_tag (
+     product_id INT NOT NULL,
+     tag_id INT NOT NULL,
+     PRIMARY KEY (product_id, tag_id),
+     FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE,
+     FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE
 );

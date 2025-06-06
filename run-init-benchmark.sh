@@ -3,10 +3,10 @@
 set -e
 
 ORMS=(
-#  "jdbc"
+  "jdbc"
 #  "hibernate"
 #  "jooq"
-  "mybatis"
+#  "mybatis"
 )
 DBS=(
   "postgresql"

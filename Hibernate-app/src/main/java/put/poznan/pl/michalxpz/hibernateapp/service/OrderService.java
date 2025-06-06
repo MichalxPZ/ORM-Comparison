@@ -23,7 +23,7 @@ public class OrderService {
 
     /** Scenariusz 1: Odczyt zamówienia z produktami */
     @Transactional(readOnly = true)
-    public Order getOrderWithItems(Long orderId) {
+    public Order getOrderWithItems(Integer orderId) {
         return orderRepository.findById(orderId)
                 .orElseThrow(() -> new IllegalArgumentException("Order not found"));
     }
@@ -53,7 +53,7 @@ public class OrderService {
 
     /** Scenariusz 5: Transakcja: zakup wielu produktów przez użytkownika */
     @Transactional
-    public Order placeOrder(Long userId, List<Long> productIds) {
+    public Order placeOrder(Integer userId, List<Integer> productIds) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 

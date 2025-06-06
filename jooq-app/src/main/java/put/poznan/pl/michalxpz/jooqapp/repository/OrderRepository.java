@@ -18,7 +18,7 @@ public class OrderRepository {
     /** Retrieves the order record by ID, throwing if not found. */
     public OrdersRecord findById(Long orderId) {
         OrdersRecord order = dsl.selectFrom(ORDERS)
-                .where(ORDERS.ID.eq(orderId))
+                .where(ORDERS.ID.eq(Math.toIntExact(orderId)))
                 .fetchOne();
         if (order == null) {
             throw new IllegalArgumentException("Order not found");
@@ -27,27 +27,27 @@ public class OrderRepository {
     }
 
     /** Retrieves all products belonging to a given order via the join table. */
-    public List<ProductRecord> findProductsByOrderId(Long orderId) {
-        return dsl.select(PRODUCT.fields())
-                .from(PRODUCT)
-                .join(ORDER_ITEM).on(PRODUCT.ID.eq(ORDER_ITEM.PRODUCT_ID))
-                .where(ORDER_ITEM.ORDER_ID.eq(orderId))
-                .fetchInto(ProductRecord.class);
+    public List<ProductsRecord> findProductsByOrderId(Long orderId) {
+        return dsl.select(PRODUCTS.fields())
+                .from(PRODUCTS)
+                .join(ORDER_ITEMS).on(PRODUCTS.ID.eq(ORDER_ITEMS.PRODUCT_ID))
+                .where(ORDER_ITEMS.ORDER_ID.eq(Math.toIntExact(orderId)))
+                .fetchInto(ProductsRecord.class);
     }
 
     /** Creates a new order with the given userId, date and productIds. */
     public OrdersRecord createOrder(Long userId, LocalDateTime orderDate, Set<Long> productIds) {
         // Insert into ORDERS table
         OrdersRecord orderRecord = dsl.newRecord(ORDERS);
-        orderRecord.setUserId(userId);
+        orderRecord.setUserId(Math.toIntExact(userId));
         orderRecord.setOrderDate(orderDate);
         orderRecord.store(); // Inserts and populates the generated ID
 
         // Insert into the join table for each product
         for (Long productId : productIds) {
-            dsl.insertInto(ORDER_ITEM)
-                    .columns(ORDER_ITEM.ORDER_ID, ORDER_ITEM.PRODUCT_ID)
-                    .values(orderRecord.getId().longValue(), productId)
+            dsl.insertInto(ORDER_ITEMS)
+                    .columns(ORDER_ITEMS.ORDER_ID, ORDER_ITEMS.PRODUCT_ID)
+                    .values(orderRecord.getId(), Math.toIntExact(productId))
                     .execute();
         }
         return orderRecord;

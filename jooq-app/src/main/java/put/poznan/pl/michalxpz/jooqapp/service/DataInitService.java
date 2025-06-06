@@ -39,29 +39,29 @@ public class DataInitService {
         userRepository.saveAll(users);
 
         // 2. Categories
-        List<CategoryRecord> categories = new ArrayList<>();
+        List<CategoriesRecord> categories = new ArrayList<>();
         for (int i = 1; i <= categoryCount; i++) {
-            CategoryRecord category = dsl.newRecord(CATEGORY);
+            CategoriesRecord category = dsl.newRecord(CATEGORIES);
             category.setName("Category" + i);
             categories.add(category);
         }
         categoryRepository.saveAll(categories);
 
         // 3. Tags
-        List<TagRecord> tags = new ArrayList<>();
+        List<TagsRecord> tags = new ArrayList<>();
         for (int i = 1; i <= categoryCount * 2; i++) {
-            TagRecord tag = dsl.newRecord(TAG);
+            TagsRecord tag = dsl.newRecord(TAGS);
             tag.setName("Tag" + i);
             tags.add(tag);
         }
         tagRepository.saveAll(tags);
 
         // 4. Products
-        List<ProductRecord> products = new ArrayList<>();
+        List<ProductsRecord> products = new ArrayList<>();
         for (int i = 1; i <= productCount; i++) {
             // Pick random category
-            CategoryRecord category = categories.get(rand.nextInt(categories.size()));
-            ProductRecord product = dsl.newRecord(PRODUCT);
+            CategoriesRecord category = categories.get(rand.nextInt(categories.size()));
+            ProductsRecord product = dsl.newRecord(PRODUCTS);
             product.setName("Product" + i);
             product.setDescription("Description of product " + i);
             product.setPrice(BigDecimal.valueOf(10 + rand.nextInt(90)));
@@ -73,21 +73,21 @@ public class DataInitService {
             int tagCount = 1 + rand.nextInt(3);
             Set<Long> productTagIds = new HashSet<>();
             for (int j = 0; j < tagCount; j++) {
-                Long tagId = tags.get(rand.nextInt(tags.size())).getId();
-                productTagIds.add(tagId);
+                Integer tagId = tags.get(rand.nextInt(tags.size())).getId();
+                productTagIds.add(Long.valueOf(tagId));
             }
             // Insert join table entries for product-tags
             for (Long tagId : productTagIds) {
                 dsl.insertInto(PRODUCT_TAG)
                         .columns(PRODUCT_TAG.PRODUCT_ID, PRODUCT_TAG.TAG_ID)
-                        .values(product.getId(), tagId)
+                        .values(product.getId(), Math.toIntExact(tagId))
                         .execute();
             }
             products.add(product);
         }
 
         // 5. Orders
-        List<Long> productIds = products.stream().map(ProductRecord::getId).toList();
+        List<Integer> productIds = products.stream().map(ProductsRecord::getId).toList();
         for (int i = 0; i < orderCount; i++) {
             // Pick random user
             UsersRecord user = users.get(rand.nextInt(users.size()));
@@ -100,13 +100,13 @@ public class DataInitService {
             // Add random products to this order
             Set<Long> orderProductIds = new HashSet<>();
             for (int j = 0; j < itemsPerOrder; j++) {
-                orderProductIds.add(productIds.get(rand.nextInt(productIds.size())));
+                orderProductIds.add(Long.valueOf(productIds.get(rand.nextInt(productIds.size()))));
             }
             // Insert join table entries for order-products
             for (Long pid : orderProductIds) {
-                dsl.insertInto(ORDER_ITEM)
-                        .columns(ORDER_ITEM.ORDER_ID, ORDER_ITEM.PRODUCT_ID)
-                        .values(order.getId().longValue(), pid)
+                dsl.insertInto(ORDER_ITEMS)
+                        .columns(ORDER_ITEMS.ORDER_ID, ORDER_ITEMS.PRODUCT_ID)
+                        .values(order.getId(), Math.toIntExact(pid))
                         .execute();
             }
         }

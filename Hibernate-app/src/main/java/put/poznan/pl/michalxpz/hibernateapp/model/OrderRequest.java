@@ -10,6 +10,6 @@ import java.util.List;
 @Getter @Setter
 @NoArgsConstructor @AllArgsConstructor
 public class OrderRequest {
-    private Long userId;
-    private List<Long> productIds;
+    private Integer userId;
+    private List<Integer> productIds;
 }

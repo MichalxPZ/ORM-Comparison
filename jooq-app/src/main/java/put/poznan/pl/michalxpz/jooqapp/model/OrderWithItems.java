@@ -13,6 +13,6 @@ public class OrderWithItems {
     private Long id;
     private LocalDateTime orderDate;
     private Long userId;
-    private List<ProductRecord> products;
+    private List<ProductsRecord> products;
 
 }

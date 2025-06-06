@@ -15,7 +15,7 @@ public class ProductService {
 
     /** Scenario 2: Filter and sort products by criteria. */
     @Transactional(readOnly = true)
-    public List<ProductRecord> getFilteredProducts(Long categoryId, BigDecimal minPrice, BigDecimal maxPrice, String keyword) {
+    public List<ProductsRecord> getFilteredProducts(Long categoryId, BigDecimal minPrice, BigDecimal maxPrice, String keyword) {
         return productRepository.findFiltered(categoryId, minPrice, maxPrice, keyword);
     }
 

@@ -11,8 +11,8 @@ import java.util.List;
 public class TagRepository {
     @Autowired private DSLContext dsl;
 
-    public void saveAll(List<TagRecord> tags) {
-        for (TagRecord tag : tags) {
+    public void saveAll(List<TagsRecord> tags) {
+        for (TagsRecord tag : tags) {
             tag.store();
         }
     }

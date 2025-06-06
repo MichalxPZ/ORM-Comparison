@@ -12,7 +12,7 @@ Przed rozpoczęciem upewnij się, że masz zainstalowane następujące narzędzi
 
 Start Minikube – uruchom klaster poleceniem (opcjonalnie zwiększ pamięć/RAM jeśli planujesz testy obciążeniowe z dużymi batchami, np. do 4GB):
 ```bash
-minikube start --memory=4096 --cpus=6
+minikube start --memory=6144 --cpus=6
 ```
 Konfiguracja Docker w środowisku Minikube – wykonaj polecenie, które przełączy domyślny kontekst Dockera na demon Dockera działający wewnątrz Minikube:
 ```bash
@@ -171,9 +171,9 @@ rate(http_server_requests_seconds_count{uri="/api/orders/batchItems",status="200
 1. Scenariusz inicjalizacji bazy danych:
 ```promql
 (
-  sum by (application) (rate(http_server_requests_seconds_sum{uri="/api/init"}[60m]))
+  sum by (application) (last_over_time(http_server_requests_seconds_sum{uri="/api/init"}[5m]))
   /
-  sum by (application) (rate(http_server_requests_seconds_count{uri="/api/init"}[60m]))
+  sum by (application) (last_over_time(http_server_requests_seconds_count{uri="/api/init"}[5m]))
 ) * 1000
 ```
 

@@ -34,7 +34,7 @@
     </resultMap>
     <select id="findItemsByOrderId" parameterType="long" resultMap="ProductForOrderResult">
         SELECT p.*
-        FROM order_item oi
+        FROM order_items oi
         JOIN product p ON oi.product_id = p.id
         WHERE oi.order_id = #{orderId}
     </select>
@@ -45,9 +45,9 @@
         VALUES (#{user.id}, #{orderDate})
     </insert>
 
-    <!-- Wstawianie wpisu do order_item -->
+    <!-- Wstawianie wpisu do order_items -->
     <insert id="insertOrderItem" parameterType="map">
-        INSERT INTO order_item (order_id, product_id)
+        INSERT INTO order_items (order_id, product_id)
         VALUES (#{orderId}, #{productId})
     </insert>
 </mapper>

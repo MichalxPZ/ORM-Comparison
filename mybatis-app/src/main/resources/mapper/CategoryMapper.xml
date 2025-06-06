@@ -10,18 +10,18 @@
     </resultMap>
 
     <select id="findAll" resultMap="CategoryResult">
-        SELECT * FROM category
+        SELECT * FROM categories
     </select>
 
     <select id="findById" parameterType="long" resultMap="CategoryResult">
-        SELECT * FROM category WHERE id = #{id}
+        SELECT * FROM categories WHERE id = #{id}
     </select>
 
     <insert id="insert"
             parameterType="put.poznan.pl.michalxpz.mybatisapp.model.Category"
             useGeneratedKeys="true"
             keyProperty="id">
-        INSERT INTO category (name) VALUES (#{name})
+        INSERT INTO categories (name) VALUES (#{name})
     </insert>
 
 </mapper>

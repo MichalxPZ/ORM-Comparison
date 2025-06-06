@@ -20,7 +20,7 @@ public class UserRepository {
 
     public UsersRecord findById(Long userId) {
         UsersRecord user = dsl.selectFrom(USERS)
-                .where(USERS.ID.eq(userId))
+                .where(USERS.ID.eq(Math.toIntExact(userId)))
                 .fetchOne();
         if (user == null) {
             throw new IllegalArgumentException("User not found");

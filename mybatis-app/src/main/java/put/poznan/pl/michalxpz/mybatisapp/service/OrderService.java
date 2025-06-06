@@ -55,7 +55,7 @@ public class OrderService {
 
         // Zapis zamówienia:
         orderMapper.insertOrder(order); // po wywołaniu order.id zostanie ustawione (useGeneratedKeys)
-        // Zapis pozycji do tabeli order_item:
+        // Zapis pozycji do tabeli order_items:
         for (Product p : orderProducts) {
             orderMapper.insertOrderItem(order.getId(), p.getId());
         }

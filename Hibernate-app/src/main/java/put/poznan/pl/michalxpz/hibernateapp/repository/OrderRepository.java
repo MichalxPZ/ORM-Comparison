@@ -10,7 +10,7 @@ import put.poznan.pl.michalxpz.hibernateapp.model.Order;
 import java.util.Optional;
 
 @Repository
-public interface OrderRepository extends JpaRepository<Order, Long> {
+public interface OrderRepository extends JpaRepository<Order, Integer> {
     // Metoda pobierająca Order razem z listą pozycji (join fetch)
     @Query("SELECT o FROM Order o LEFT JOIN FETCH o.products WHERE o.id = :id")
     Optional<Order> findByIdWithProducts(@Param("id") Long id);

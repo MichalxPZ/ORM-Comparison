@@ -11,8 +11,8 @@ import java.util.List;
 public class CategoryRepository {
     @Autowired private DSLContext dsl;
 
-    public void saveAll(List<CategoryRecord> categories) {
-        for (CategoryRecord category : categories) {
+    public void saveAll(List<CategoriesRecord> categories) {
+        for (CategoriesRecord category : categories) {
             category.store();
         }
     }
