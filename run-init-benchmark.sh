@@ -4,9 +4,9 @@ set -e
 
 ORMS=(
   "jdbc"
-#  "hibernate"
-#  "jooq"
-#  "mybatis"
+  "hibernate"
+  "jooq"
+  "mybatis"
 )
 DBS=(
   "postgresql"
