@@ -12,7 +12,7 @@ Przed rozpoczęciem upewnij się, że masz zainstalowane następujące narzędzi
 
 Start Minikube – uruchom klaster poleceniem (opcjonalnie zwiększ pamięć/RAM jeśli planujesz testy obciążeniowe z dużymi batchami, np. do 4GB):
 ```bash
-minikube start --memory=6144 --cpus=6
+minikube start --memory=8192 --cpus=4 --driver=docker
 ```
 Konfiguracja Docker w środowisku Minikube – wykonaj polecenie, które przełączy domyślny kontekst Dockera na demon Dockera działający wewnątrz Minikube:
 ```bash
@@ -176,7 +176,33 @@ rate(http_server_requests_seconds_count{uri="/api/orders/batchItems",status="200
   sum by (application) (last_over_time(http_server_requests_seconds_count{uri="/api/init"}[5m]))
 ) * 1000
 ```
-
+2. Scenariusz get by id
+```promql
+(
+  sum by (application) (last_over_time(http_server_requests_seconds_sum{uri="/api/orders/{id}"}[5m]))
+  /
+  sum by (application) (last_over_time(http_server_requests_seconds_count{uri="/api/orders/{id}"}[5m]))
+) * 1000
+```
+3. Scenariusz get products
+```promql
+(
+  sum by (application) (last_over_time(http_server_requests_seconds_sum{uri="/api/products"}[5m]))
+  /
+  sum by (application) (last_over_time(http_server_requests_seconds_count{uri="/api/products"}[5m]))
+) * 1000
+```
+4. Scenariusz batch items
+```promql
+sum by (orm_db, param) (
+  label_join(last_over_time(batch_insert_duration_seconds_sum[5m]), "orm_db", "-", "orm", "db")
+)
+/
+sum by (orm_db, param) (
+  label_join(last_over_time(batch_insert_duration_seconds_count[5m]), "orm_db", "-", "orm", "db")
+) * 10000
+```
+Transformacje: Join by labels, convert field type, filter data by values, sort by
 
 ## Czyszczenie środowiska
 Aby usunąć aplikację i wszystkie zasoby, które zostały utworzone, użyj polecenia:

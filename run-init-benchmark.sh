@@ -80,6 +80,26 @@ for ORM in "${ORMS[@]}"; do
 
     sleep 5
 
+    echo "📨 Sending scenario 1 requests (/api/orders/{id})..."
+    for i in {1..10}; do
+      curl -s "http://localhost:$LOCAL_PORT/api/orders/$i"
+      echo "🔁 Request $i sent to /api/orders/$i"
+    done
+
+  sleep 5
+
+  echo "📨 Scenario 2: /api/products filtered by category, price, and keyword"
+  curl -s "http://localhost:$LOCAL_PORT/api/products?categoryId=1&minPrice=5&maxPrice=400&keyword=5"
+
+    sleep 5
+
+    echo "📨 Scenario 3: /api/orders/batchItems with varying count"
+    for count in 5000 50000 75000 100000 200000 300000 400000 500000; do
+      echo "🔁 Inserting order with $count items"
+      curl -s -X POST "http://localhost:$LOCAL_PORT/api/orders/batchItems?count=$count" > /dev/null
+      sleep 1
+    done
+
     echo "🧹 Cleaning up..."
     kill $PF_PID || echo "⚠️ Port-forward already terminated"
 #    helm uninstall $RELEASE_NAME || echo "⚠️ Could not uninstall release"

@@ -2,6 +2,8 @@ package put.poznan.pl.michalxpz.jooqapp.repository;
 
 
 import org.jooq.DSLContext;
+import put.poznan.pl.michalxpz.generated.tables.pojos.Orders;
+import put.poznan.pl.michalxpz.generated.tables.pojos.Products;
 import put.poznan.pl.michalxpz.generated.tables.records.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -16,10 +18,10 @@ public class OrderRepository {
     @Autowired private DSLContext dsl;
 
     /** Retrieves the order record by ID, throwing if not found. */
-    public OrdersRecord findById(Long orderId) {
-        OrdersRecord order = dsl.selectFrom(ORDERS)
+    public Orders findById(Long orderId) {
+        Orders order = dsl.selectFrom(ORDERS)
                 .where(ORDERS.ID.eq(Math.toIntExact(orderId)))
-                .fetchOne();
+                .fetchOneInto(Orders.class);
         if (order == null) {
             throw new IllegalArgumentException("Order not found");
         }
@@ -27,16 +29,18 @@ public class OrderRepository {
     }
 
     /** Retrieves all products belonging to a given order via the join table. */
-    public List<ProductsRecord> findProductsByOrderId(Long orderId) {
+    public List<Products> findProductsByOrderId(Long orderId) {
         return dsl.select(PRODUCTS.fields())
                 .from(PRODUCTS)
                 .join(ORDER_ITEMS).on(PRODUCTS.ID.eq(ORDER_ITEMS.PRODUCT_ID))
                 .where(ORDER_ITEMS.ORDER_ID.eq(Math.toIntExact(orderId)))
-                .fetchInto(ProductsRecord.class);
+                .fetchInto(Products.class);
     }
 
-    /** Creates a new order with the given userId, date and productIds. */
-    public OrdersRecord createOrder(Long userId, LocalDateTime orderDate, Set<Long> productIds) {
+    /**
+     * Creates a new order with the given userId, date and productIds.
+     */
+    public Orders createOrder(Long userId, LocalDateTime orderDate, Set<Long> productIds) {
         // Insert into ORDERS table
         OrdersRecord orderRecord = dsl.newRecord(ORDERS);
         orderRecord.setUserId(Math.toIntExact(userId));
@@ -50,7 +54,10 @@ public class OrderRepository {
                     .values(orderRecord.getId(), Math.toIntExact(productId))
                     .execute();
         }
-        return orderRecord;
+        Orders order = dsl.selectFrom(ORDERS)
+                .where(ORDERS.ID.eq(orderRecord.getId()))
+                .fetchOneInto(Orders.class);
+        return order;
     }
 }
 

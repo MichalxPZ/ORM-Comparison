@@ -129,12 +129,12 @@ public class ScenarioController {
             action.run();
         } finally {
             if (value == null) {
-                sample.stop(Timer.builder(String.format("%s-%s-%s-duration_seconds", scenario, orm, db))
+                sample.stop(Timer.builder(String.format("%s-duration_seconds", scenario))
                         .description("Czas wykonania scenariusza testowego")
                         .tags("scenario", scenario, "orm", orm, "db", db)
                         .register(meterRegistry));
             } else {
-                sample.stop(Timer.builder(String.format("%s-%s-%s-duration_seconds", scenario, orm, db))
+                sample.stop(Timer.builder(String.format("%s-duration_seconds", scenario))
                         .description("Czas wykonania scenariusza testowego")
                         .tags("scenario", scenario, "orm", orm, "db", db, "param", String.valueOf(value))
                         .register(meterRegistry));

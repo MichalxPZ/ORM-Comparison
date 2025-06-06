@@ -1,5 +1,7 @@
 package put.poznan.pl.michalxpz.hibernateapp.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -10,6 +12,7 @@ import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Entity
 @Getter @Setter
@@ -25,9 +28,15 @@ public class Product {
     private BigDecimal price;
     private int stock;
 
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id")
     private Category category;
+
+    @JsonProperty("categoryId")
+    public Integer getCategoryId() {
+        return category != null ? category.getId() : null;
+    }
 
     @ManyToMany
     @JoinTable(
@@ -37,7 +46,15 @@ public class Product {
     )
     private Set<Tag> tags = new HashSet<>();
 
+    @JsonProperty("tagIds")
+    public Set<Integer> getTagIds() {
+        return tags.stream()
+                .map(Tag::getId)
+                .collect(Collectors.toSet());
+    }
+
     @ManyToMany(mappedBy = "products")
+    @JsonIgnore
     private Set<Order> orders = new HashSet<>();
 
 }

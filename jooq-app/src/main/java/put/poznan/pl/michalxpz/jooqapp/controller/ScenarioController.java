@@ -8,7 +8,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import put.poznan.pl.michalxpz.generated.tables.records.OrdersRecord;
+import put.poznan.pl.michalxpz.generated.tables.pojos.Orders;
+import put.poznan.pl.michalxpz.generated.tables.pojos.Products;
 import put.poznan.pl.michalxpz.jooqapp.model.OrderRequest;
 import put.poznan.pl.michalxpz.jooqapp.model.OrderWithItems;
 import put.poznan.pl.michalxpz.jooqapp.service.DataInitService;
@@ -50,15 +51,15 @@ public class ScenarioController {
     // Scenariusz 2: Filtrowanie i sortowanie listy produktów po kryteriach
     @Timed("getProducts.timer")
     @GetMapping("/products")
-    public ResponseEntity<List<put.poznan.pl.michalxpz.generated.tables.records.ProductsRecord>> getProducts(@RequestParam(required=false) Long categoryId,
-                                                                                                             @RequestParam(required=false) BigDecimal minPrice,
-                                                                                                             @RequestParam(required=false) BigDecimal maxPrice,
-                                                                                                             @RequestParam(required=false) String keyword) {
+    public ResponseEntity<List<Products>> getProducts(@RequestParam(required=false) Long categoryId,
+                                                      @RequestParam(required=false) BigDecimal minPrice,
+                                                      @RequestParam(required=false) BigDecimal maxPrice,
+                                                      @RequestParam(required=false) String keyword) {
         logger.info("Filtering products with criteria: categoryId=" + categoryId +
                 ", minPrice=" + minPrice + ", maxPrice=" + maxPrice + ", keyword='" + keyword + "'");
-        AtomicReference<List<put.poznan.pl.michalxpz.generated.tables.records.ProductsRecord>> productsRef = new AtomicReference<>();
+        AtomicReference<List<Products>> productsRef = new AtomicReference<>();
         recordMetrics("get-products", null, () -> {
-            List<put.poznan.pl.michalxpz.generated.tables.records.ProductsRecord> products = productService.getFilteredProducts(categoryId, minPrice, maxPrice, keyword);
+            List<Products> products = productService.getFilteredProducts(categoryId, minPrice, maxPrice, keyword);
             productsRef.set(products);
         });
 
@@ -68,11 +69,11 @@ public class ScenarioController {
     // Scenariusz 3: Utworzenie zamówienia z batch-insert wielu pozycji (parametr count określa liczbę pozycji)
     @Timed("batch-insert.timer")
     @PostMapping("/orders/batchItems")
-    public ResponseEntity<OrdersRecord> createOrderBatch(@RequestParam(name="count", defaultValue="10") int count) {
+    public ResponseEntity<Orders> createOrderBatch(@RequestParam(name="count", defaultValue="10") int count) {
         logger.info("Creating order with " + count + " items using batch insert.");
-        AtomicReference<OrdersRecord> orderRef = new AtomicReference<>();
+        AtomicReference<Orders> orderRef = new AtomicReference<>();
         recordMetrics("batch-insert", count, () -> {
-            OrdersRecord order = orderService.createOrderWithItemsBatch(count);
+            Orders order = orderService.createOrderWithItemsBatch(count);
             orderRef.set(order);
         });
         return ResponseEntity.ok(orderRef.get());
@@ -94,11 +95,11 @@ public class ScenarioController {
     // Scenariusz 5: Złożona operacja transakcyjna - utworzenie zamówienia z listą produktów dla użytkownika
     @Timed("createOrderTransactional.timer")
     @PostMapping("/orders/complex")
-    public ResponseEntity<OrdersRecord> createOrderTransactional(@RequestBody OrderRequest request) {
+    public ResponseEntity<Orders> createOrderTransactional(@RequestBody OrderRequest request) {
         logger.info("Creating order for user: " + request.getUserId() + " with products: " + request.getProductIds());
-        AtomicReference<OrdersRecord> orderRef = new AtomicReference<>();
+        AtomicReference<Orders> orderRef = new AtomicReference<>();
         recordMetrics("transactionalOrder", null, () -> {
-            OrdersRecord order = orderService.placeOrder(request.getUserId(), request.getProductIds());
+            Orders order = orderService.placeOrder(request.getUserId(), request.getProductIds());
             orderRef.set(order);
         });
         return ResponseEntity.ok(orderRef.get());
@@ -129,12 +130,12 @@ public class ScenarioController {
             action.run();
         } finally {
             if (value == null) {
-                sample.stop(Timer.builder(String.format("%s-%s-%s-duration_seconds", scenario, orm, db))
+                sample.stop(Timer.builder(String.format("%s-duration_seconds", scenario))
                         .description("Czas wykonania scenariusza testowego")
                         .tags("scenario", scenario, "orm", orm, "db", db)
                         .register(meterRegistry));
             } else {
-                sample.stop(Timer.builder(String.format("%s-%s-%s-duration_seconds", scenario, orm, db))
+                sample.stop(Timer.builder(String.format("%s-duration_seconds", scenario))
                         .description("Czas wykonania scenariusza testowego")
                         .tags("scenario", scenario, "orm", orm, "db", db, "param", String.valueOf(value))
                         .register(meterRegistry));

@@ -1,6 +1,7 @@
 package put.poznan.pl.michalxpz.jdbcapp.repository;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.ConnectionCallback;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
@@ -30,11 +31,26 @@ public class OrderItemRepository {
 
     public void insertBatch(List<OrderItem> items) {
         String sql = "INSERT INTO order_items(order_id, product_id, quantity) VALUES(?,?,?)";
-        List<Object[]> batchArgs = new ArrayList<>();
-        for (OrderItem item : items) {
-            batchArgs.add(new Object[]{ item.getOrderId(), item.getProductId(), item.getQuantity() });
-        }
-        jdbcTemplate.batchUpdate(sql, batchArgs);
+        jdbcTemplate.execute((ConnectionCallback<Void>) conn -> {
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                int batchSize = 500;
+                int count = 0;
+
+                for (OrderItem item : items) {
+                    ps.setLong(1, item.getOrderId());
+                    ps.setLong(2, item.getProductId());
+                    ps.setInt(3, item.getQuantity());
+                    ps.addBatch();
+
+                    count++;
+                    if (count % batchSize == 0) {
+                        ps.executeBatch();  // wysyłka partii
+                    }
+                }
+                ps.executeBatch();  // ostatnia partia (jeśli coś zostało)
+            }
+            return null;
+        });
     }
 
     public Long insert(OrderItem item) {

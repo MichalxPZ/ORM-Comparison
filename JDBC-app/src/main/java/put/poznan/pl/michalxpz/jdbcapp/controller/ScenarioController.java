@@ -1,7 +1,6 @@
 package put.poznan.pl.michalxpz.jdbcapp.controller;
 
 import io.micrometer.core.annotation.Timed;
-import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
 import lombok.extern.slf4j.Slf4j;
@@ -42,7 +41,7 @@ public class ScenarioController {
     public ResponseEntity<Order> getOrderWithItems(@PathVariable Long id) {
         logger.info("Fetching order with ID: " + id);
         AtomicReference<Order> orderRef = new AtomicReference<>();
-        recordMetrics("batch-insert", null, () -> {
+        recordMetrics("get-by-id", null, () -> {
             Order order = orderService.getOrderWithItems(id);
             orderRef.set(order);
         });
@@ -59,7 +58,7 @@ public class ScenarioController {
         logger.info("Filtering products with criteria: categoryId=" + categoryId +
                 ", minPrice=" + minPrice + ", maxPrice=" + maxPrice + ", keyword='" + keyword + "'");
         AtomicReference<List<Product>> productsRef = new AtomicReference<>();
-        recordMetrics("batch-insert", null, () -> {
+        recordMetrics("get-products", null, () -> {
             List<Product> products = productService.getFilteredProducts(categoryId, minPrice, maxPrice, keyword);
             productsRef.set(products);
         });
@@ -131,12 +130,12 @@ public class ScenarioController {
             action.run();
         } finally {
             if (value == null) {
-                sample.stop(Timer.builder(String.format("%s-%s-%s-duration_seconds", scenario, orm, db))
+                sample.stop(Timer.builder(String.format("%s-duration_seconds", scenario))
                         .description("Czas wykonania scenariusza testowego")
                         .tags("scenario", scenario, "orm", orm, "db", db)
                         .register(meterRegistry));
             } else {
-                sample.stop(Timer.builder(String.format("%s-%s-%s-duration_seconds", scenario, orm, db))
+                sample.stop(Timer.builder(String.format("%s-duration_seconds", scenario))
                         .description("Czas wykonania scenariusza testowego")
                         .tags("scenario", scenario, "orm", orm, "db", db, "param", String.valueOf(value))
                         .register(meterRegistry));

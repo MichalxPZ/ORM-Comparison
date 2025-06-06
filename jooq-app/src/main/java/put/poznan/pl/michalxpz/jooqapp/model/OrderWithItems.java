@@ -2,6 +2,7 @@ package put.poznan.pl.michalxpz.jooqapp.model;
 
 import lombok.Getter;
 import lombok.Setter;
+import put.poznan.pl.michalxpz.generated.tables.pojos.Products;
 import put.poznan.pl.michalxpz.generated.tables.records.*;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -13,6 +14,6 @@ public class OrderWithItems {
     private Long id;
     private LocalDateTime orderDate;
     private Long userId;
-    private List<ProductsRecord> products;
+    private List<Products> products;
 
 }

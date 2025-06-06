@@ -5,6 +5,7 @@ import org.jooq.DSLContext;
 import org.jooq.impl.DSL;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
+import put.poznan.pl.michalxpz.generated.tables.pojos.Products;
 import put.poznan.pl.michalxpz.generated.tables.records.*;
 
 import java.math.BigDecimal;
@@ -17,8 +18,10 @@ import static put.poznan.pl.michalxpz.generated.Tables.*;
 public class ProductRepository {
     @Autowired private DSLContext dsl;
 
-    /** Finds products matching optional filters and orders them by name. */
-    public List<ProductsRecord> findFiltered(Long categoryId, BigDecimal minPrice, BigDecimal maxPrice, String keyword) {
+    /**
+     * Finds products matching optional filters and orders them by name.
+     */
+    public List<Products> findFiltered(Long categoryId, BigDecimal minPrice, BigDecimal maxPrice, String keyword) {
         // Start with base SELECT
         var query = dsl.selectFrom(PRODUCTS);
         // Build dynamic WHERE conditions
@@ -42,7 +45,7 @@ public class ProductRepository {
         // Execute query with ORDER BY name
         return query.where(condition)
                 .orderBy(PRODUCTS.NAME.asc())
-                .fetch();
+                .fetchInto(Products.class);
     }
 
     /** Bulk-updates product prices by a percentage (e.g. percent=10 means +10%). */
@@ -57,17 +60,17 @@ public class ProductRepository {
     }
 
     /** Retrieves all products ordered by ID (used for batch order creation). */
-    public List<ProductsRecord> findAll() {
+    public List<Products> findAll() {
         return dsl.selectFrom(PRODUCTS)
                 .orderBy(PRODUCTS.ID.asc())
-                .fetch();
+                .fetchInto(Products.class);
     }
 
     /** Finds products by a list of IDs. */
-    public List<ProductsRecord> findAllById(List<Long> ids) {
+    public List<Products> findAllById(List<Long> ids) {
         return dsl.selectFrom(PRODUCTS)
                 .where(PRODUCTS.ID.in(ids))
-                .fetch();
+                .fetchInto(Products.class);
     }
 }
 

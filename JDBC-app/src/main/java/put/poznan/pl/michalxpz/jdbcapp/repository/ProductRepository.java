@@ -73,7 +73,7 @@ public class ProductRepository {
             params.add(maxPrice);
         }
         if (keyword != null && !keyword.isEmpty()) {
-            sql.append(" AND description ILIKE ?");
+            sql.append(" AND description LIKE ?");
             params.add("%" + keyword + "%");
         }
         sql.append(" ORDER BY price ASC");

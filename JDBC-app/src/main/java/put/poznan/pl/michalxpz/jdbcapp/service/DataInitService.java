@@ -65,7 +65,7 @@ public class DataInitService {
             int basePrice = 5 + rand.nextInt(496);  // 5 to 500
             BigDecimal price = BigDecimal.valueOf(basePrice).setScale(2);
             Product product = new Product(null, categoryId, "Product" + p,
-                    "Sample product " + p, price, 100);
+                    "Description of product " + p, price, 100);
             productRepo.insert(product);
             if (product.getId() == null) {
                 throw new IllegalStateException("Failed to get ID of new product");

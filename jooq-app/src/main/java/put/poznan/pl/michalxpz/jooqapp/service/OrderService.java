@@ -4,6 +4,9 @@ package put.poznan.pl.michalxpz.jooqapp.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import put.poznan.pl.michalxpz.generated.tables.pojos.Orders;
+import put.poznan.pl.michalxpz.generated.tables.pojos.Products;
+import put.poznan.pl.michalxpz.generated.tables.pojos.Users;
 import put.poznan.pl.michalxpz.jooqapp.model.OrderWithItems;
 import put.poznan.pl.michalxpz.jooqapp.repository.OrderRepository;
 import put.poznan.pl.michalxpz.jooqapp.repository.ProductRepository;
@@ -25,34 +28,34 @@ public class OrderService {
     @Transactional(readOnly = true)
     public OrderWithItems getOrderWithItems(Long orderId) {
         // Fetch order record and its products
-        OrdersRecord orderRec = orderRepository.findById(orderId);
-        List<ProductsRecord> products = orderRepository.findProductsByOrderId(orderId);
+        Orders orderRec = orderRepository.findById(orderId);
+        List<Products> products = orderRepository.findProductsByOrderId(orderId);
 
         // Map to our DTO-like object
         OrderWithItems orderWithItems = new OrderWithItems();
-        orderWithItems.setId(Long.valueOf(orderRec.getId()));
-        orderWithItems.setOrderDate(orderRec.getOrderDate());
-        orderWithItems.setUserId(Long.valueOf(orderRec.getUserId()));
+        orderWithItems.setId(Long.valueOf(orderRec.id()));
+        orderWithItems.setOrderDate(orderRec.orderDate());
+        orderWithItems.setUserId(Long.valueOf(orderRec.userId()));
         orderWithItems.setProducts(products);
         return orderWithItems;
     }
 
     /** Scenario 3: Create an order with a batch of items. */
     @Transactional
-    public OrdersRecord createOrderWithItemsBatch(int itemCount) {
+    public Orders createOrderWithItemsBatch(int itemCount) {
         // Pick any user
-        List<UsersRecord> users = userRepository.findAll();
+        List<Users> users = userRepository.findAll();
         if (users.isEmpty()) throw new IllegalStateException("No users found");
-        Integer userId = Math.toIntExact(users.get(0).getId());
+        Integer userId = Math.toIntExact(users.get(0).id());
 
         // Get all products to cycle through
-        List<ProductsRecord> allProducts = productRepository.findAll();
+        List<Products> allProducts = productRepository.findAll();
         if (allProducts.isEmpty()) throw new IllegalStateException("No products found");
 
         // Select product IDs (wrapping around the list)
         Set<Long> orderProductIds = new HashSet<>();
         for (int i = 0; i < itemCount; i++) {
-            orderProductIds.add(Long.valueOf(allProducts.get(i % allProducts.size()).getId()));
+            orderProductIds.add(Long.valueOf(allProducts.get(i % allProducts.size()).id()));
         }
 
         // Create and return the order
@@ -61,12 +64,12 @@ public class OrderService {
 
     /** Scenario 5: Place order for user with given product IDs. */
     @Transactional
-    public OrdersRecord placeOrder(Long userId, List<Long> productIds) {
+    public Orders placeOrder(Long userId, List<Long> productIds) {
         // Verify user exists
         userRepository.findById(userId);
 
         // Verify all products exist
-        List<ProductsRecord> products = productRepository.findAllById(productIds);
+        List<Products> products = productRepository.findAllById(productIds);
         if (products.size() != productIds.size()) {
             throw new IllegalArgumentException("Some products not found");
         }

@@ -3,6 +3,7 @@ package put.poznan.pl.michalxpz.jooqapp.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import put.poznan.pl.michalxpz.generated.tables.pojos.Products;
 import put.poznan.pl.michalxpz.generated.tables.records.*;
 import put.poznan.pl.michalxpz.jooqapp.repository.ProductRepository;
 
@@ -15,7 +16,7 @@ public class ProductService {
 
     /** Scenario 2: Filter and sort products by criteria. */
     @Transactional(readOnly = true)
-    public List<ProductsRecord> getFilteredProducts(Long categoryId, BigDecimal minPrice, BigDecimal maxPrice, String keyword) {
+    public List<Products> getFilteredProducts(Long categoryId, BigDecimal minPrice, BigDecimal maxPrice, String keyword) {
         return productRepository.findFiltered(categoryId, minPrice, maxPrice, keyword);
     }
 
