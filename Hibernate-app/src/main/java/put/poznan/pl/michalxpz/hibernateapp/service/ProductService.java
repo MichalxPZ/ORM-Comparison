@@ -1,5 +1,6 @@
 package put.poznan.pl.michalxpz.hibernateapp.service;
 
+import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.domain.Specification;
@@ -45,8 +46,8 @@ public class ProductService {
 
     // Scenariusz 4: masowa aktualizacja cen produktów
     @Transactional
-    public int updateProductPrices(BigDecimal percent) {
-        return productRepository.updatePrices(percent);
+    public int updateProductPrices(Integer mod) {
+        return productRepository.updatePrices(mod);
     }
 }
 

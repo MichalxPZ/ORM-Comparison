@@ -24,7 +24,7 @@ public class ProductService {
 
     // Scenariusz 4: masowa aktualizacja cen produktów
     @Transactional
-    public int updateProductPrices(BigDecimal percent) {
-        return productMapper.updatePrices(percent);
+    public int updateProductPrices(Integer mod) {
+        return productMapper.updatePrices(mod);
     }
 }

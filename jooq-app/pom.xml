@@ -57,6 +57,11 @@
 			<groupId>io.micrometer</groupId>
 			<artifactId>micrometer-registry-prometheus</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>net.ttddyy</groupId>
+			<artifactId>datasource-proxy</artifactId>
+			<version>1.9</version>
+		</dependency>
 
 		<dependency>
 			<groupId>org.postgresql</groupId>

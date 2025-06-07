@@ -65,10 +65,10 @@
         ORDER BY p.name
     </select>
 
-    <!-- Aktualizacja cen produktów -->
-    <update id="updatePrices" parameterType="java.math.BigDecimal">
+    <update id="updatePrices" parameterType="java.lang.Integer">
         UPDATE products
-        SET price = price * (1 + #{percent}/100)
+        SET price = price * (1 + #{mod} / 100)
+        WHERE MOD(id, #{mod}) = 0
     </update>
 
     <insert id="insert" parameterType="put.poznan.pl.michalxpz.mybatisapp.model.Product" useGeneratedKeys="true" keyProperty="id">

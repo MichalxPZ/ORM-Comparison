@@ -81,9 +81,6 @@ public class OrderService {
             if (p == null) {
                 throw new IllegalArgumentException("Product " + productId + " not found");
             }
-            if (p.getStock() <= 0) {
-                throw new RuntimeException("Product " + productId + " is out of stock");
-            }
             // zmniejsz stan magazynowy produktu o 1
             productRepo.updateStock(p.getId(), p.getStock() - 1);
             products.add(p);

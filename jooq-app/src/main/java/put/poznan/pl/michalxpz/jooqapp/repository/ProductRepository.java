@@ -3,6 +3,7 @@ package put.poznan.pl.michalxpz.jooqapp.repository;
 import org.jooq.Condition;
 import org.jooq.DSLContext;
 import org.jooq.impl.DSL;
+import org.jooq.impl.QOM;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import put.poznan.pl.michalxpz.generated.tables.pojos.Products;
@@ -49,13 +50,12 @@ public class ProductRepository {
     }
 
     /** Bulk-updates product prices by a percentage (e.g. percent=10 means +10%). */
-    public int updatePrices(BigDecimal percent) {
-        // Compute multiplier = (100 + percent) / 100, e.g. 1.10 for +10%
-        BigDecimal multiplier = percent.add(BigDecimal.valueOf(100))
-                .divide(BigDecimal.valueOf(100));
+    public int updatePrices(Integer mod) {
+        double factor = 1 + mod.doubleValue() / 100.0;
         // Execute SQL UPDATE
         return dsl.update(PRODUCTS)
-                .set(PRODUCTS.PRICE, PRODUCTS.PRICE.mul(multiplier))
+                .set(PRODUCTS.PRICE, PRODUCTS.PRICE.mul(factor))
+                .where(PRODUCTS.ID.mod(mod).eq(0))
                 .execute();
     }
 

@@ -89,10 +89,9 @@ public class ProductRepository {
         });
     }
 
-    public int updatePrices(BigDecimal percent) {
-        // Example: percent = 10 means increase prices by +10%
-        BigDecimal factor = BigDecimal.ONE.add(percent.divide(new BigDecimal("100")));
-        String sql = "UPDATE products SET price = price * ?";
-        return jdbcTemplate.update(sql, factor);
+    public int updatePrices(Integer mod) {
+        double factor = 1 + (mod / 100.0);
+        String sql = "UPDATE products SET price = price * ? WHERE MOD(id, ?) = 0";
+        return jdbcTemplate.update(sql, factor, mod);
     }
 }

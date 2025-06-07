@@ -9,6 +9,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.context.request.RequestAttributes;
+import org.springframework.web.context.request.RequestContextHolder;
 import put.poznan.pl.michalxpz.mybatisapp.model.Order;
 import put.poznan.pl.michalxpz.mybatisapp.model.OrderRequest;
 import put.poznan.pl.michalxpz.mybatisapp.model.Product;
@@ -81,14 +83,14 @@ public class ScenarioController {
         return ResponseEntity.ok(orderRef.get());
     }
 
-    // Scenariusz 4: Masowa aktualizacja cen produktów o podany procent (np. ?percent=5.0)
+    // Scenariusz 4: Masowa aktualizacja cen produktów z filtracja po modulo
     @Timed("updatePrices.timer")
     @PutMapping("/products/prices")
-    public String updatePrices(@RequestParam BigDecimal percent) {
-        logger.info("Updating product prices by " + percent + "%");
+    public String updatePrices(@RequestParam Integer mod) {
+        logger.info("Updating product prices filtering by modulo " + mod);
         AtomicInteger updatedRef = new AtomicInteger();
-        recordMetrics("updatePrices", percent.intValue(), () -> {
-            int updated = productService.updateProductPrices(percent);
+        recordMetrics("updatePrices", mod, () -> {
+            int updated = productService.updateProductPrices(mod);
             updatedRef.set(updated);
         });
         return "Updated prices for " + updatedRef.get() + " products.";
@@ -127,7 +129,10 @@ public class ScenarioController {
 
     private void recordMetrics(String scenario, Integer value, Runnable action) {
         Timer.Sample sample = Timer.start(meterRegistry);
-
+        if (value != null) {
+            RequestContextHolder.currentRequestAttributes()
+                    .setAttribute("benchmarkParam", value, RequestAttributes.SCOPE_REQUEST);
+        }
         try {
             action.run();
         } finally {

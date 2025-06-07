@@ -200,12 +200,30 @@ sum by (orm_db, param) (
 /
 sum by (orm_db, param) (
   label_join(last_over_time(batch_insert_duration_seconds_count[5m]), "orm_db", "-", "orm", "db")
-) * 10000
+) * 1000
 ```
 Transformacje: Join by labels, convert field type, filter data by values, sort by
 
-5. Scenariusz batch insert
+5. Scenariusz batch update
+```promql
+   sum by (orm_db, param) (
+   label_join(last_over_time(updatePrices_duration_seconds_sum[5m]), "orm_db", "-", "orm", "db")
+   )
+   /
+   sum by (orm_db, param) (
+   label_join(last_over_time(updatePrices_duration_seconds_count[5m]), "orm_db", "-", "orm", "db")
+   ) * 1000
+```
+Transformacje: Join by labels, convert field type, filter data by values, sort by
+
 6. Scenariusz złożonej transakcji
+```promql
+(
+  sum by (application) (last_over_time(http_server_requests_seconds_sum{uri="/api/orders/complex"}[5m]))
+  /
+  sum by (application) (last_over_time(http_server_requests_seconds_count{uri="/api/orders/complex"}[5m]))
+) * 1000
+```
 7. Dodatkowe zapytania
 Zapytanie mierzące obciążenie CPU:
 ```promql
@@ -222,6 +240,18 @@ sum by (application) (
   rate(http_server_requests_seconds_count[5m])
 )
 ```
+Zapytanie mierzące obciążenie w procentach całkowitej mocy procesora:
+```promql
+label_join(
+  (
+    sum by (orm, db) (last_over_time(_api_orders_batchItems_cpu_usage_sum[5m]))
+    /
+    sum by (orm, db) (last_over_time(_api_orders_batchItems_cpu_usage_count[5m]))
+  ),
+  "orm_db", "-", "orm", "db"
+) * 100
+```
+
 
 ## Czyszczenie środowiska
 Aby usunąć aplikację i wszystkie zasoby, które zostały utworzone, użyj polecenia:

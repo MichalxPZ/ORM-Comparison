@@ -18,7 +18,7 @@ public interface ProductMapper {
                                @Param("keyword") String keyword);
 
     // Aktualizacja cen (zwrotny int = liczba zaktualizowanych rekordów)
-    int updatePrices(BigDecimal percent);
+    int updatePrices(Integer mod);
 
     // Wstawianie produktu
     void insert(Product product);

@@ -22,8 +22,8 @@ public class ProductService {
 
     /** Scenario 4: Bulk update of product prices. */
     @Transactional
-    public int updateProductPrices(BigDecimal percent) {
-        return productRepository.updatePrices(percent);
+    public int updateProductPrices(Integer mod) {
+        return productRepository.updatePrices(mod);
     }
 }
 

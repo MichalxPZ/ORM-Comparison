@@ -19,8 +19,8 @@ public class ProductService {
         return productRepo.findByCriteria(categoryId, minPrice, maxPrice, keyword);
     }
 
-    /** Scenariusz 4: Aktualizacja cen produktów o zadany procent */
-    public int updateProductPrices(BigDecimal percentIncrease) {
-        return productRepo.updatePrices(percentIncrease);
+    /** Scenariusz 4: Aktualizacja cen produktów */
+    public int updateProductPrices(Integer mod) {
+        return productRepo.updatePrices(mod);
     }
 }
