@@ -1,7 +1,6 @@
 package put.poznan.pl.michalxpz.hibernateapp.controller;
 
 import io.micrometer.core.annotation.Timed;
-import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
 import lombok.extern.slf4j.Slf4j;
@@ -37,20 +36,21 @@ public class ScenarioController {
     // Scenariusz 1: Pobranie zamówienia z jego pozycjami (eager/lazy load)
     @Timed("getOrderWithItems.timer")
     @GetMapping("/orders/{id}")
-    public ResponseEntity<Order> getOrderWithItems(@PathVariable Integer id) {
+    public ResponseEntity<OrderDto> getOrderWithItems(@PathVariable Integer id) {
         logger.info("Fetching order with ID: " + id);
         AtomicReference<Order> orderRef = new AtomicReference<>();
         recordMetrics("get-by-id", null, () -> {
             Order order = orderService.getOrderWithItems(id);
             orderRef.set(order);
         });
-        return ResponseEntity.ok(orderRef.get());
+        OrderDto dto = OrderMapper.toDto(orderRef.get());
+        return ResponseEntity.ok(dto);
     }
 
     // Scenariusz 2: Filtrowanie i sortowanie listy produktów po kryteriach
     @Timed("getProducts.timer")
     @GetMapping("/products")
-    public ResponseEntity<List<Product>> getProducts(@RequestParam(required=false) Long categoryId,
+    public ResponseEntity<List<ProductDto>> getProducts(@RequestParam(required=false) Long categoryId,
                                                      @RequestParam(required=false) BigDecimal minPrice,
                                                      @RequestParam(required=false) BigDecimal maxPrice,
                                                      @RequestParam(required=false) String keyword) {
@@ -62,20 +62,25 @@ public class ScenarioController {
             productsRef.set(products);
         });
 
-        return ResponseEntity.ok(productsRef.get());
+        List<ProductDto> dtos = productsRef.get().stream()
+                .map(ProductMapper::toDto)
+                .toList();
+
+        return ResponseEntity.ok(dtos);
     }
 
     // Scenariusz 3: Utworzenie zamówienia z batch-insert wielu pozycji (parametr count określa liczbę pozycji)
     @Timed("batch-insert.timer")
     @PostMapping("/orders/batchItems")
-    public ResponseEntity<Order> createOrderBatch(@RequestParam(name="count", defaultValue="10") int count) {
+    public ResponseEntity<OrderDto> createOrderBatch(@RequestParam(name="count", defaultValue="10") int count) {
         logger.info("Creating order with " + count + " items using batch insert.");
         AtomicReference<Order> orderRef = new AtomicReference<>();
         recordMetrics("batch-insert", count, () -> {
             Order order = orderService.createOrderWithItemsBatch(count);
             orderRef.set(order);
         });
-        return ResponseEntity.ok(orderRef.get());
+        OrderDto dto = OrderMapper.toDto(orderRef.get());
+        return ResponseEntity.ok(dto);
     }
 
     // Scenariusz 4: Masowa aktualizacja cen produktów o podany procent (np. ?percent=5.0)
@@ -94,14 +99,15 @@ public class ScenarioController {
     // Scenariusz 5: Złożona operacja transakcyjna - utworzenie zamówienia z listą produktów dla użytkownika
     @Timed("createOrderTransactional.timer")
     @PostMapping("/orders/complex")
-    public ResponseEntity<Order> createOrderTransactional(@RequestBody OrderRequest request) {
+    public ResponseEntity<OrderDto> createOrderTransactional(@RequestBody OrderRequest request) {
         logger.info("Creating order for user: " + request.getUserId() + " with products: " + request.getProductIds());
         AtomicReference<Order> orderRef = new AtomicReference<>();
         recordMetrics("transactionalOrder", null, () -> {
             Order order = orderService.placeOrder(request.getUserId(), request.getProductIds());
             orderRef.set(order);
         });
-        return ResponseEntity.ok(orderRef.get());
+        OrderDto dto = OrderMapper.toDto(orderRef.get());
+        return ResponseEntity.ok(dto);
     }
 
     // Endpoint: Inicjalizacja bazy danych określoną liczbą encji (użytkowników, kategorii, produktów, zamówień)

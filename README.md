@@ -204,6 +204,25 @@ sum by (orm_db, param) (
 ```
 Transformacje: Join by labels, convert field type, filter data by values, sort by
 
+5. Scenariusz batch insert
+6. Scenariusz złożonej transakcji
+7. Dodatkowe zapytania
+Zapytanie mierzące obciążenie CPU:
+```promql
+sum by (app_deployment) (
+  label_replace(
+    rate(container_cpu_usage_seconds_total{pod=~".*-app-.*"}[5m]),
+    "app_deployment", "$1", "pod", "(.*)-[a-z0-9]{9,}-[a-z0-9]{5}$"
+  )
+) * 1000
+```
+Zapytanie mierzące liczbę wykonanych zapytań na sekundę:
+```promql
+sum by (application) (
+  rate(http_server_requests_seconds_count[5m])
+)
+```
+
 ## Czyszczenie środowiska
 Aby usunąć aplikację i wszystkie zasoby, które zostały utworzone, użyj polecenia:
 ```bash
