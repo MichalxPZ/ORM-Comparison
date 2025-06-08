@@ -15,7 +15,7 @@ import java.math.BigDecimal;
 public interface ProductRepository extends JpaRepository<Product, Integer>, JpaSpecificationExecutor<Product> {
     // Metoda do masowej aktualizacji cen (batch update)
     @Modifying
-    @Query("UPDATE Product p SET p.price = p.price * (1 + :mod/100) WHERE MOD(p.id, 5) = 0")
+    @Query("UPDATE Product p SET p.price = p.price * (1 + :mod/100) WHERE MOD(p.id, :mod) = 0")
     int updatePrices(Integer mod);
 }
 

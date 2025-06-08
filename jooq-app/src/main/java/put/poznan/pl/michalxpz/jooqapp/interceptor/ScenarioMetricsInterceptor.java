@@ -25,6 +25,9 @@ public class ScenarioMetricsInterceptor implements HandlerInterceptor {
     private final ClassLoadingMXBean classBean;
     private final ThreadLocal<Long> startCpuTime = new ThreadLocal<>();
     private final ThreadLocal<Long> startNanoTime = new ThreadLocal<>();
+    private final ThreadLocal<Integer> startLoadedClassesCount = new ThreadLocal<>();
+    private final ThreadLocal<Long> startHeapUsed = new ThreadLocal<>();
+
     @Value("${orm:unknown}")
     private String orm;
 
@@ -44,7 +47,9 @@ public class ScenarioMetricsInterceptor implements HandlerInterceptor {
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
         startCpuTime.set(osBean.getProcessCpuTime());
         startNanoTime.set(System.nanoTime());
-        QueryCountHolder.clear(); // reset licznika zapytań SQL
+        startLoadedClassesCount.set(classBean.getLoadedClassCount());
+        startHeapUsed.set(memoryBean.getHeapMemoryUsage().getUsed());
+        QueryCountHolder.clear();
         return true;
     }
 
@@ -81,24 +86,22 @@ public class ScenarioMetricsInterceptor implements HandlerInterceptor {
                 .register(meterRegistry)
                 .record(heapUsed);
 
-        // Non-heap memory
-        long nonHeapUsed = memoryBean.getNonHeapMemoryUsage().getUsed();
-        DistributionSummary.builder(String.format("%s_memory_nonheap_used_bytes", scenario))
-                .description("Non-heap memory used during scenario")
+        long heapUsedDelta = heapUsed - startHeapUsed.get();
+        DistributionSummary.builder(String.format("%s_memory_heap_used_delta_bytes", scenario)) // <-- ZMIANA NAZWY
+                .description("Net change in heap memory used during scenario")
                 .baseUnit("bytes")
                 .tags("scenario", scenario, "orm", orm, "db", db, "param", paramTag)
                 .register(meterRegistry)
-                .record(nonHeapUsed);
+                .record(heapUsedDelta);
 
-        // Number of loaded classes
-        int loadedClasses = classBean.getLoadedClassCount();
+        int endLoadedClasses = classBean.getLoadedClassCount();
+        int loadedClassesDelta = endLoadedClasses - startLoadedClassesCount.get();         int loadedClasses = classBean.getLoadedClassCount();
         DistributionSummary.builder(String.format("%s_classes_loaded", scenario))
                 .description("Number of classes loaded by ClassLoader")
                 .tags("scenario", scenario, "orm", orm, "db", db, "param", paramTag)
                 .register(meterRegistry)
-                .record(loadedClasses);
+                .record(loadedClassesDelta);
 
-        // SQL query count
         QueryCount queryCount = QueryCountHolder.getGrandTotal();
         long totalQueries = queryCount != null ? queryCount.getTotal() : 0;
         DistributionSummary.builder(String.format("%s_sql_queries", scenario))
@@ -107,7 +110,6 @@ public class ScenarioMetricsInterceptor implements HandlerInterceptor {
                 .register(meterRegistry)
                 .record(totalQueries);
 
-        // Wyczyść QueryCount po zarejestrowaniu metryki
         QueryCountHolder.clear();
     }
 }

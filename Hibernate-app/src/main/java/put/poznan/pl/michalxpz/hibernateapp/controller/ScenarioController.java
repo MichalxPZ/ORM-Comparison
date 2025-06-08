@@ -38,7 +38,7 @@ public class ScenarioController {
     // Scenariusz 1: Pobranie zamówienia z jego pozycjami (eager/lazy load)
     @Timed("getOrderWithItems.timer")
     @GetMapping("/orders/{id}")
-    public ResponseEntity<OrderDto> getOrderWithItems(@PathVariable Integer id) {
+    public ResponseEntity<OrderDto> api(@PathVariable Integer id) {
         logger.info("Fetching order with ID: " + id);
         AtomicReference<Order> orderRef = new AtomicReference<>();
         recordMetrics("get-by-id", null, () -> {

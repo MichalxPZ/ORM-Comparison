@@ -227,29 +227,58 @@ Transformacje: Join by labels, convert field type, filter data by values, sort b
 7. Dodatkowe zapytania
 Zapytanie mierzące obciążenie CPU:
 ```promql
-sum by (app_deployment) (
-  label_replace(
-    rate(container_cpu_usage_seconds_total{pod=~".*-app-.*"}[5m]),
-    "app_deployment", "$1", "pod", "(.*)-[a-z0-9]{9,}-[a-z0-9]{5}$"
-  )
-) * 1000
-```
-Zapytanie mierzące liczbę wykonanych zapytań na sekundę:
-```promql
-sum by (application) (
-  rate(http_server_requests_seconds_count[5m])
-)
-```
-Zapytanie mierzące obciążenie w procentach całkowitej mocy procesora:
-```promql
 label_join(
   (
-    sum by (orm, db) (last_over_time(_api_orders_batchItems_cpu_usage_sum[5m]))
+    sum by (orm, db) (last_over_time(_api_init_cpu_usage_sum[5m]))
     /
-    sum by (orm, db) (last_over_time(_api_orders_batchItems_cpu_usage_count[5m]))
+    sum by (orm, db) (last_over_time(_api_init_cpu_usage_count[5m]))
   ),
   "orm_db", "-", "orm", "db"
 ) * 100
+```
+Zapytanie mierzące zmianę w pamięci stosu:
+```promql
+label_join(
+  (
+    sum by (orm, db) (last_over_time(_api_init_memory_heap_used_delta_bytes_sum[5m]))
+    /
+    sum by (orm, db) (last_over_time(_api_init_memory_heap_used_delta_bytes_count[5m]))
+  ),
+  "orm_db", "-", "orm", "db"
+)
+```
+Zapytanie mierzące aktualną pamięć stosu:
+```promql
+label_join(
+  (
+    sum by (orm, db) (last_over_time(_api_init_memory_heap_used_bytes_sum[5m]))
+    /
+    sum by (orm, db) (last_over_time(_api_init_memory_heap_used_bytes_count[5m]))
+  ),
+  "orm_db", "-", "orm", "db"
+)
+```
+Zapytanie do sprawdzenia różnicy załadowanych klas do JVM:
+```promql
+label_join(
+  (
+    sum by (orm, db) (last_over_time(_api_init_classes_loaded_sum[5m]))
+    /
+    sum by (orm, db) (last_over_time(_api_init_classes_loaded_count[5m]))
+  ),
+  "orm_db", "-", "orm", "db"
+)
+```
+Zapytanie do sprawdzania wykonanych zapytań sql wychwytywanych przed DataSource Proxy:
+```promql   
+label_join(
+  (
+    sum by (orm, db) (last_over_time(_api_init_sql_queries_sum[5m]))
+    /
+    sum by (orm, db) (last_over_time(_api_init_sql_queries_count[5m]))
+  ),
+  "orm_db", "-", "orm", "db"
+)
 ```
 
 

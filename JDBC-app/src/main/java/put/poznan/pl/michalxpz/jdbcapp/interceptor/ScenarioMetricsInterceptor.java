@@ -49,7 +49,7 @@ public class ScenarioMetricsInterceptor implements HandlerInterceptor {
         startNanoTime.set(System.nanoTime());
         startLoadedClassesCount.set(classBean.getLoadedClassCount());
         startHeapUsed.set(memoryBean.getHeapMemoryUsage().getUsed());
-        QueryCountHolder.clear(); // reset licznika zapytań SQL
+        QueryCountHolder.clear();
         return true;
     }
 
@@ -85,6 +85,14 @@ public class ScenarioMetricsInterceptor implements HandlerInterceptor {
                 .tags("scenario", scenario, "orm", orm, "db", db, "param", paramTag)
                 .register(meterRegistry)
                 .record(heapUsed);
+
+        long heapUsedDelta = heapUsed - startHeapUsed.get();
+        DistributionSummary.builder(String.format("%s_memory_heap_used_delta_bytes", scenario)) // <-- ZMIANA NAZWY
+                .description("Net change in heap memory used during scenario")
+                .baseUnit("bytes")
+                .tags("scenario", scenario, "orm", orm, "db", db, "param", paramTag)
+                .register(meterRegistry)
+                .record(heapUsedDelta);
 
         int endLoadedClasses = classBean.getLoadedClassCount();
         int loadedClassesDelta = endLoadedClasses - startLoadedClassesCount.get();         int loadedClasses = classBean.getLoadedClassCount();

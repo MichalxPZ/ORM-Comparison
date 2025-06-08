@@ -103,7 +103,7 @@ for ORM in "${ORMS[@]}"; do
     sleep 2
     echo "📨 Scenario 4: Updating prices for selected products using modulo filtering"
 
-    for mod in 1 2 3 5 10; do
+    for mod in 10 5 3 2 1; do
       percent=$((mod * 2))
       echo "🔁 Updating prices by ${percent}% for products with id % ${mod} == 0"
       curl -s -X PUT "http://localhost:$LOCAL_PORT/api/products/prices?mod=${mod}"
