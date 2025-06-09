@@ -129,10 +129,11 @@ http_server_requests_seconds_count{uri="/api/orders/batchItems"}
 
 ### Grafana
 ```bash
+kubectl apply -f  k8s-manifests/monitoring/grafana-pvc.yaml
 helm repo add grafana https://grafana.github.io/helm-charts   # jeśli repo nie jest dodane
 helm repo update
-helm install grafana grafana/grafana --set adminPassword=admin123 --wait
-```
+helm install grafana grafana/grafana -f k8s-manifests/monitoring/grafana-config.yaml --wait
+  ```
 Portforwarding:
 ```bash
 kubectl port-forward svc/grafana 3000:80 &

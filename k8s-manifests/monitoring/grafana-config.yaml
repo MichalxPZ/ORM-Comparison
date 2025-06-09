@@ -1,0 +1,29 @@
+# grafana-config.yaml
+
+adminPassword: admin123
+
+persistence:
+  enabled: true
+  type: pvc
+  existingClaim: "grafana-viz"
+
+
+imageRenderer:
+  enabled: true
+
+grafana.ini:
+  rendering:
+    server_url: http://{{.Release.Name}}-image-renderer:8081/render
+    callback_url: http://{{.Release.Name}}:{{.Values.service.port}}/
+
+initChownData:
+  enabled: false
+
+podSecurityContext:
+  fsGroup: 472
+  runAsGroup: 472
+  runAsUser: 472
+
+securityContext:
+  runAsGroup: 472
+  runAsUser: 472
