@@ -2,6 +2,7 @@ package put.poznan.pl.michalxpz.jooqapp.repository;
 
 
 import org.jooq.DSLContext;
+import org.jooq.impl.DSL;
 import put.poznan.pl.michalxpz.generated.tables.pojos.Users;
 import put.poznan.pl.michalxpz.generated.tables.records.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +28,14 @@ public class UserRepository {
             throw new IllegalArgumentException("User not found");
         }
         return user;
+    }
+
+    public Users findRandomUser(String db) {
+        String randomFunction = db.equalsIgnoreCase("postgresql") ? "RANDOM()" : "RAND()";
+        return dsl.selectFrom(USERS)
+                .orderBy(DSL.field(randomFunction)) // dynamiczne sortowanie
+                .limit(1)
+                .fetchOneInto(Users.class);
     }
 
     public void saveAll(List<UsersRecord> users) {

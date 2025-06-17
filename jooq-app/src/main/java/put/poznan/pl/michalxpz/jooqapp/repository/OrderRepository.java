@@ -2,12 +2,15 @@ package put.poznan.pl.michalxpz.jooqapp.repository;
 
 
 import org.jooq.DSLContext;
+import org.jooq.Query;
+import org.jooq.impl.QOM;
 import put.poznan.pl.michalxpz.generated.tables.pojos.Orders;
 import put.poznan.pl.michalxpz.generated.tables.pojos.Products;
 import put.poznan.pl.michalxpz.generated.tables.records.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -40,24 +43,12 @@ public class OrderRepository {
     /**
      * Creates a new order with the given userId, date and productIds.
      */
-    public Orders createOrder(Long userId, LocalDateTime orderDate, Set<Long> productIds) {
-        // Insert into ORDERS table
+    public OrdersRecord insertOrder(Long userId, LocalDateTime orderDate) {
         OrdersRecord orderRecord = dsl.newRecord(ORDERS);
         orderRecord.setUserId(Math.toIntExact(userId));
         orderRecord.setOrderDate(orderDate);
-        orderRecord.store(); // Inserts and populates the generated ID
-
-        // Insert into the join table for each product
-        for (Long productId : productIds) {
-            dsl.insertInto(ORDER_ITEMS)
-                    .columns(ORDER_ITEMS.ORDER_ID, ORDER_ITEMS.PRODUCT_ID)
-                    .values(orderRecord.getId(), Math.toIntExact(productId))
-                    .execute();
-        }
-        Orders order = dsl.selectFrom(ORDERS)
-                .where(ORDERS.ID.eq(orderRecord.getId()))
-                .fetchOneInto(Orders.class);
-        return order;
+        orderRecord.store();
+        return orderRecord;
     }
 }
 

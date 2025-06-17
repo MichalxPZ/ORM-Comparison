@@ -1,25 +1,28 @@
 package put.poznan.pl.michalxpz.hibernateapp.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import put.poznan.pl.michalxpz.hibernateapp.model.*;
+import put.poznan.pl.michalxpz.hibernateapp.repository.CategoryRepository;
 import put.poznan.pl.michalxpz.hibernateapp.repository.OrderRepository;
 import put.poznan.pl.michalxpz.hibernateapp.repository.ProductRepository;
 import put.poznan.pl.michalxpz.hibernateapp.repository.UserRepository;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.HashSet;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 @Service
 public class OrderService {
 
-    @Autowired
-    private OrderRepository orderRepository;
+    @Autowired private OrderRepository orderRepository;
     @Autowired private UserRepository userRepository;
     @Autowired private ProductRepository productRepository;
+    @Autowired private CategoryRepository categoryRepository;
+    @Value("${DB:postgresql}") private String db;
 
     /** Scenariusz 1: Odczyt zamówienia z produktami */
     @Transactional(readOnly = true)
@@ -31,23 +34,32 @@ public class OrderService {
     /** Scenariusz 3: Utworzenie zamówienia z batch-em produktów */
     @Transactional
     public Order createOrderWithItemsBatch(int itemCount) {
-        User user = userRepository.findAll().stream()
-                .findAny()
-                .orElseThrow(() -> new IllegalStateException("No users found"));
+        User randomUser = db.equalsIgnoreCase("postgresql")
+                ? userRepository.findRandomUserPostgres()
+                : userRepository.findRandomUserMySQL();
+        if (randomUser == null) {
+            throw new IllegalStateException("Brak użytkowników w bazie!");
+        }
+        Product product = new Product();
+        product.setName("NewProduct");
+        product.setDescription("Batch-insert product");
+        product.setPrice(new BigDecimal("100.00"));
+        product.setStock(100);
+        product.setCategory(categoryRepository.findById(1).orElseThrow());
 
-        List<Product> allProducts = productRepository.findAll();
-        if (allProducts.isEmpty()) throw new IllegalStateException("No products found");
+        productRepository.save(product);
 
         Order order = new Order();
         order.setOrderDate(LocalDateTime.now());
-        order.setUser(user);
+        order.setUser(randomUser);
 
-        Set<Product> orderProducts = new HashSet<>();
+        List<Product> productList = new ArrayList<>(itemCount);
         for (int i = 0; i < itemCount; i++) {
-            orderProducts.add(allProducts.get(i % allProducts.size()));
+            productList.add(product);
         }
 
-        order.setProducts(orderProducts);
+        order.setProducts(productList);
+        orderRepository.save(order);
         return orderRepository.save(order);
     }
 
@@ -65,7 +77,7 @@ public class OrderService {
         Order order = new Order();
         order.setUser(user);
         order.setOrderDate(LocalDateTime.now());
-        order.setProducts(new HashSet<>(products));
+        order.setProducts(new ArrayList<>(products));
 
         return orderRepository.save(order);
     }

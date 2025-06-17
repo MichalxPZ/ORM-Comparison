@@ -77,8 +77,7 @@ public class ScenarioController {
         logger.info("Creating order with " + count + " items using batch insert.");
         AtomicReference<Order> orderRef = new AtomicReference<>();
         recordMetrics("batch-insert", count, () -> {
-            Order order = orderService.createOrderWithItemsBatch(count);
-            orderRef.set(order);
+            orderService.createOrderWithItemsBatch(count);
         });
         return ResponseEntity.ok(orderRef.get());
     }

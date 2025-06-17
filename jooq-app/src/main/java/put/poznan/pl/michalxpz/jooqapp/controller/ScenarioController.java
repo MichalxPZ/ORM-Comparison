@@ -12,6 +12,7 @@ import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
 import put.poznan.pl.michalxpz.generated.tables.pojos.Orders;
 import put.poznan.pl.michalxpz.generated.tables.pojos.Products;
+import put.poznan.pl.michalxpz.generated.tables.records.OrdersRecord;
 import put.poznan.pl.michalxpz.jooqapp.model.OrderRequest;
 import put.poznan.pl.michalxpz.jooqapp.model.OrderWithItems;
 import put.poznan.pl.michalxpz.jooqapp.service.DataInitService;
@@ -97,11 +98,11 @@ public class ScenarioController {
     // Scenariusz 5: Złożona operacja transakcyjna - utworzenie zamówienia z listą produktów dla użytkownika
     @Timed("createOrderTransactional.timer")
     @PostMapping("/orders/complex")
-    public ResponseEntity<Orders> createOrderTransactional(@RequestBody OrderRequest request) {
+    public ResponseEntity<OrdersRecord> createOrderTransactional(@RequestBody OrderRequest request) {
         logger.info("Creating order for user: " + request.getUserId() + " with products: " + request.getProductIds());
-        AtomicReference<Orders> orderRef = new AtomicReference<>();
+        AtomicReference<OrdersRecord> orderRef = new AtomicReference<>();
         recordMetrics("transactionalOrder", null, () -> {
-            Orders order = orderService.placeOrder(request.getUserId(), request.getProductIds());
+            OrdersRecord order = orderService.placeOrder(request.getUserId(), request.getProductIds());
             orderRef.set(order);
         });
         return ResponseEntity.ok(orderRef.get());

@@ -80,7 +80,7 @@ public class DataInitService {
             order.setUser(user);
 
             // Dodaj losowe produkty
-            Set<Product> orderProducts = new HashSet<>();
+            List<Product> orderProducts = new ArrayList<>();
             for (int j = 0; j < itemsPerOrder; j++) {
                 orderProducts.add(products.get(rand.nextInt(products.size())));
             }

@@ -72,5 +72,40 @@ public class ProductRepository {
                 .where(PRODUCTS.ID.in(ids))
                 .fetchInto(Products.class);
     }
+
+    public Products saveAndReturn(Products product) {
+        if (product.id() == null) {
+            // Insert + zwrócenie nowego produktu z ID
+            Integer id = dsl.insertInto(PRODUCTS)
+                    .set(PRODUCTS.CATEGORY_ID, product.categoryId())
+                    .set(PRODUCTS.NAME, product.name())
+                    .set(PRODUCTS.DESCRIPTION, product.description())
+                    .set(PRODUCTS.PRICE, product.price())
+                    .set(PRODUCTS.STOCK, product.stock())
+                    .returning(PRODUCTS.ID)
+                    .fetchOne()
+                    .getId();
+
+            return new Products(
+                    id,
+                    product.categoryId(),
+                    product.name(),
+                    product.description(),
+                    product.price(),
+                    product.stock()
+            );
+        } else {
+            // Update, zwracamy ten sam produkt
+            dsl.update(PRODUCTS)
+                    .set(PRODUCTS.CATEGORY_ID, product.categoryId())
+                    .set(PRODUCTS.NAME, product.name())
+                    .set(PRODUCTS.DESCRIPTION, product.description())
+                    .set(PRODUCTS.PRICE, product.price())
+                    .set(PRODUCTS.STOCK, product.stock())
+                    .where(PRODUCTS.ID.eq(product.id()))
+                    .execute();
+            return product;
+        }
+    }
 }
 
