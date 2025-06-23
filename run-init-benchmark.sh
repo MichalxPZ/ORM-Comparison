@@ -3,15 +3,15 @@
 set -e
 
 ORMS=(
-#  "jdbc"
-#  "hibernate"
+  "jdbc"
+  "hibernate"
   "jooq"
-#  "mybatis"
+  "mybatis"
 )
 DBS=(
-#  "postgresql"
+  "postgresql"
   "mysql"
-#  "mariadb"
+  "mariadb"
 )
 
 CHART_PATH="./k8s-manifests/app"
