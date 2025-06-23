@@ -48,7 +48,7 @@ public class OrderService {
         User user = userMapper.findRandomUser(db);
         if (user == null) throw new IllegalStateException("No users found");
 
-        Product product = new Product();
+        Product product = new  Product();
         product.setName("NewProduct");
         product.setDescription("Batch-insert product");
         product.setPrice(new BigDecimal("100.00"));

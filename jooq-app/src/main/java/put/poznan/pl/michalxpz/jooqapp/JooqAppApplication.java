@@ -4,11 +4,12 @@ import org.jooq.DSLContext;
 import org.jooq.SQLDialect;
 import org.jooq.conf.Settings;
 import org.jooq.impl.DSL;
+import org.jooq.impl.DefaultConfiguration;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.env.Environment;
+import put.poznan.pl.michalxpz.jooqapp.interceptor.LoggingExecuteListener;
 
 import javax.sql.DataSource;
 
@@ -25,10 +26,16 @@ public class JooqAppApplication {
 		SQLDialect dialect = SQLDialect.valueOf(dialectStr);
 
 		Settings settings = new Settings();
+		settings.withRenderSchema(dialect != SQLDialect.POSTGRES);
+		settings.withExecuteLogging(true);
 
-        settings.withRenderSchema(dialect != SQLDialect.POSTGRES);
+		DefaultConfiguration configuration = new DefaultConfiguration();
+		configuration.setSQLDialect(dialect);
+		configuration.setDataSource(dataSource);
+		configuration.setSettings(settings);
+		configuration.setExecuteListener(new LoggingExecuteListener());
 
-		return DSL.using(dataSource, dialect, settings);
+		return DSL.using(configuration);
 	}
 
 }

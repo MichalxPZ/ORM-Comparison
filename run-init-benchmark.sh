@@ -3,8 +3,8 @@
 set -e
 
 ORMS=(
-  "jdbc"
-  "hibernate"
+#  "jdbc"
+#  "hibernate"
   "jooq"
   "mybatis"
 )
@@ -79,19 +79,19 @@ for ORM in "${ORMS[@]}"; do
     curl -X POST "http://localhost:$LOCAL_PORT/api/init?users=1000&categories=5&products=100&orders=2000&itemsPerOrder=5"
 
     sleep 2
-
-    echo "📨 Sending scenario 1 requests (/api/orders/{id})..."
-    for i in {1..10}; do
-      curl -s "http://localhost:$LOCAL_PORT/api/orders/$i" > /dev/null
-      echo "🔁 Request $i sent to /api/orders/$i"
-    done
-
-  sleep 2
-
-  echo "📨 Scenario 2: /api/products filtered by category, price, and keyword"
-  curl -s "http://localhost:$LOCAL_PORT/api/products?categoryId=1&minPrice=5&maxPrice=400&keyword=5" > /dev/null
-
-    sleep 2
+#
+#    echo "📨 Sending scenario 1 requests (/api/orders/{id})..."
+#    for i in {1..10}; do
+#      curl -s "http://localhost:$LOCAL_PORT/api/orders/$i" > /dev/null
+#      echo "🔁 Request $i sent to /api/orders/$i"
+#    done
+#
+#  sleep 2
+#
+#  echo "📨 Scenario 2: /api/products filtered by category, price, and keyword"
+#  curl -s "http://localhost:$LOCAL_PORT/api/products?categoryId=1&minPrice=5&maxPrice=400&keyword=5" > /dev/null
+#
+#    sleep 2
 
     echo "📨 Scenario 3: /api/orders/batchItems with varying count"
     for count in 5000 50000 75000 100000 200000 300000 400000 500000; do
@@ -100,24 +100,25 @@ for ORM in "${ORMS[@]}"; do
       sleep 1
     done
 
-    sleep 2
-    echo "📨 Scenario 4: Updating prices for selected products using modulo filtering"
-
-    for mod in 10 5 3 2 1; do
-      percent=$((mod * 2))
-      echo "🔁 Updating prices by ${percent}% for products with id % ${mod} == 0"
-      curl -s -X PUT "http://localhost:$LOCAL_PORT/api/products/prices?mod=${mod}"
-      echo ""
-    done
-
-    sleep 2
-
-    echo "📨 Scenario 5: Creating transactional order"
-    curl -s -X POST "http://localhost:$LOCAL_PORT/api/orders/complex" \
-         -H "Content-Type: application/json" \
-         -d '{"userId": 1, "productIds": [1, 2, 3]}'
-    echo -e "\n✅ Transactional order complete"
-
+#    sleep 2
+#    echo "📨 Scenario 4: Updating prices for selected products using modulo filtering"
+#
+#    for mod in 10 5 3 2 1; do
+#      percent=$((mod * 2))
+#      echo "🔁 Updating prices by ${percent}% for products with id % ${mod} == 0"
+#      curl -s -X PUT "http://localhost:$LOCAL_PORT/api/products/prices?mod=${mod}"
+#      echo ""
+#    done
+#
+#    sleep 2
+#
+#    echo "📨 Scenario 5: Creating transactional order"
+#    curl -s -X POST "http://localhost:$LOCAL_PORT/api/orders/complex" \
+#         -H "Content-Type: application/json" \
+#         -d '{"userId": 1, "productIds": [1, 2, 3]}'
+#    echo -e "\n✅ Transactional order complete"
+#
+#
 
     echo "🧹 Cleaning up..."
     kill $PF_PID || echo "⚠️ Port-forward already terminated"
