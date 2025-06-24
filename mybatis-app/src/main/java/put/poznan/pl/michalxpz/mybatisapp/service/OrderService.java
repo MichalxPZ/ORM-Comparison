@@ -61,14 +61,12 @@ public class OrderService {
         order.setUser(user);
         orderMapper.insertOrder(order);
 
-        List<Product> products = new ArrayList<>(itemCount);
         for (int i = 0; i < itemCount; i++) {
+            List<Product> products = new ArrayList<>(itemCount);
             products.add(product);
             orderMapper.insertOrderItem(order.getId(), product.getId());
         }
         session.commit();
-
-        order.setProducts(new HashSet<>(products));
         }
     }
 

@@ -98,12 +98,12 @@ public class ScenarioController {
     // Scenariusz 5: Złożona operacja transakcyjna - utworzenie zamówienia z listą produktów dla użytkownika
     @Timed("createOrderTransactional.timer")
     @PostMapping("/orders/complex")
-    public ResponseEntity<OrdersRecord> createOrderTransactional(@RequestBody OrderRequest request) {
+    public ResponseEntity<Orders> createOrderTransactional(@RequestBody OrderRequest request) {
         logger.info("Creating order for user: " + request.getUserId() + " with products: " + request.getProductIds());
-        AtomicReference<OrdersRecord> orderRef = new AtomicReference<>();
+        AtomicReference<Orders> orderRef = new AtomicReference<>();
         recordMetrics("transactionalOrder", null, () -> {
             OrdersRecord order = orderService.placeOrder(request.getUserId(), request.getProductIds());
-            orderRef.set(order);
+            orderRef.set(new Orders(order.getId(), order.getUserId(), order.getOrderDate()));
         });
         return ResponseEntity.ok(orderRef.get());
     }
